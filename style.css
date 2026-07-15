@@ -1,0 +1,334 @@
+/* ==========================================================================
+   全体設計・リセット
+   ========================================================================== */
+   * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Noto Serif JP', 'Sawarabi Mincho', serif;
+    background-color: #fcfaf2; /* 和紙のような温かみのある生成り色 */
+    color: #2c2520; /* 深い焦げ茶（引き締め） */
+    line-height: 1.8;
+    overflow-x: hidden;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+li {
+    list-style: none;
+}
+
+/* 共通セクションタイトル */
+.section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 3rem;
+    position: relative;
+    padding-bottom: 1rem;
+    font-weight: 700;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background-color: #9e2a2b; /* 看板に合わせた朱色 */
+}
+
+/* ==========================================================================
+   ヘッダー
+   ========================================================================== */
+.site-header {
+    background-color: rgba(44, 37, 32, 0.95); /* 深い焦げ茶（半透明） */
+    color: #fcfaf2;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.site-logo .branch {
+    font-size: 1rem;
+    color: #f4a261;
+}
+
+.header-nav ul {
+    display: flex;
+    gap: 2rem;
+}
+
+.header-nav a {
+    font-size: 1rem;
+    transition: color 0.3s;
+    font-weight: bold;
+}
+
+.header-nav a:hover {
+    color: #f4a261;
+}
+
+/* ==========================================================================
+   ファーストビュー（Heroセクション）
+   ========================================================================== */
+.hero-section {
+    position: relative;
+    width: 100%;
+    height: 90vh; /* 画面の高さに合わせる */
+    background-color: #1a1512;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.hero-image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 画像の比率を保ったままいっぱいに表示 */
+    opacity: 0.75; /* 文字を見やすくするために少し暗くする */
+}
+
+.hero-text {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.9);
+    padding: 0 1rem;
+}
+
+.catchphrase {
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.6;
+    letter-spacing: 4px;
+    writing-mode: vertical-rl; /* 縦書きにして和風感をアップ */
+    margin: 0 auto;
+    height: auto;
+    max-height: 60vh;
+}
+
+/* ==========================================================================
+   こだわりセクション（看板2枚）
+   ========================================================================== */
+.about-section {
+    max-width: 1200px;
+    margin: 6rem auto;
+    padding: 0 2rem;
+}
+
+.about-container {
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+}
+
+.about-card {
+    flex: 1;
+    max-width: 450px;
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #e8e2d5;
+    text-align: center;
+}
+
+.about-img {
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+}
+
+.about-card h3 {
+    font-size: 1.3rem;
+    color: #9e2a2b;
+    margin-bottom: 1rem;
+}
+
+.about-card p {
+    font-size: 0.95rem;
+    text-align: left;
+    color: #555;
+}
+
+/* ==========================================================================
+   お品書き（メニューセクション）
+   ========================================================================== */
+.menu-section {
+    background-color: #f3edd8; /* 少し濃い和風のベージュ */
+    padding: 6rem 2rem;
+}
+
+.menu-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+}
+
+.menu-category {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border-left: 5px solid #9e2a2b;
+}
+
+.menu-category h3 {
+    font-size: 1.4rem;
+    color: #2c2520;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e8e2d5;
+    padding-bottom: 0.5rem;
+}
+
+.menu-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.8rem 0;
+    border-bottom: 1px dotted #ccc;
+}
+
+.menu-list .name {
+    font-weight: 700;
+}
+
+.menu-list .name small {
+    display: block;
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 0.2rem;
+}
+
+.menu-list .price {
+    font-weight: 700;
+    color: #9e2a2b;
+    white-space: nowrap;
+}
+
+.menu-note {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 1rem;
+    text-align: right;
+}
+
+/* ==========================================================================
+   フッター・店舗情報
+   ========================================================================== */
+.site-footer {
+    background-color: #2c2520;
+    color: #fcfaf2;
+    padding: 4rem 2rem 2rem;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.footer-logo {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+}
+
+.footer-info {
+    margin-bottom: 3rem;
+}
+
+.footer-info .tel {
+    font-size: 1.8rem;
+    color: #f4a261;
+    margin-bottom: 1rem;
+}
+
+.footer-info .tel strong {
+    font-family: sans-serif; /* 電話番号は読みやすいゴシック */
+}
+
+.footer-info .address, 
+.footer-info .open-hours {
+    font-size: 0.95rem;
+    color: #ccc;
+    margin-bottom: 0.5rem;
+}
+
+.copyright {
+    font-size: 0.8rem;
+    color: #888;
+    border-top: 1px solid #443a33;
+    padding-top: 2rem;
+}
+
+/* ==========================================================================
+   レスポンシブ対応（スマホ表示）
+   ========================================================================== */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hero-section {
+        height: 70vh;
+    }
+
+    .catchphrase {
+        font-size: 1.8rem;
+        max-height: 50vh;
+    }
+
+    .about-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .menu-category {
+        padding: 1.5rem;
+    }
+
+    .menu-list li {
+        font-size: 0.9rem;
+    }
+}
