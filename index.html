@@ -2,467 +2,184 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>琴嵐ミニゲームテスト - 敵襲来！</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #fcfaf2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            font-family: 'Courier New', Courier, monospace, sans-serif;
-            touch-action: none;
-        }
-        canvas {
-            background-color: #1a1512;
-            border: 4px double #9e2a2b;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            max-width: 100%;
-            height: auto;
-        }
-        .instruction {
-            margin-top: 15px;
-            color: #2c2520;
-            font-size: 14px;
-            text-align: center;
-            line-height: 1.5;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地鶏家 琴嵐 天満店 | 佐渡ヶ嶽部屋直伝ちゃんこ鍋・炭火やきとり</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Sawarabi+Mincho&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <canvas id="gameCanvas" width="360" height="500"></canvas>
-    <div class="instruction">
-        【操作方法】<br>
-        PC: 左右キーで移動（スペースキーで連射）<br>
-        スマホ: 画面スライドで移動＆自動連射
+    <header class="site-header">
+        <div class="header-container">
+            <h1 class="site-logo">地鶏家 琴嵐 <span class="branch">天満店</span></h1>
+            <nav class="header-nav">
+                <ul>
+                    <li><a href="#about">こだわり</a></li>
+                    <li><a href="#menu">お品書き</a></li>
+                    <li><a href="#access">アクセス</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <div class="hero-image-wrapper">
+            <img src="photo2.png" alt="地鶏家 琴嵐 店舗外観" class="hero-image">
+        </div>
+        <div class="hero-text">
+            <p class="catchphrase">暖簾の先に、<br>佐渡ヶ嶽部屋直伝の味が待っている。</p>
+        </div>
+    </section>
+
+    <section id="about" class="about-section">
+        <h2 class="section-title">琴嵐のこだわり</h2>
+        <div class="about-container">
+            <div class="about-card">
+                <img src="photo1.png" alt="佐渡ヶ嶽部屋直伝のスープ" class="about-img">
+                <h3>直伝の至高スープ</h3>
+                <p>鶏ガラをふんだんに使い、じっくりと炊き出したコクのあるスープ。一口飲めば体に染み渡る、本物のちゃんこ・もつ鍋をどうぞ。</p>
+            </div>
+            <div class="about-card">
+                <img src="photo3.png" alt="スタミナチャージ" class="about-img">
+                <h3>元力士の店主が炊き出す</h3>
+                <p>同期には錚々たるメンバー。お相撲さんしか知らない「本物の味」と「世界の話」を、美味しいお酒と共にお楽しみいただけます。</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu" class="menu-section">
+        <h2 class="section-title">お品書き</h2>
+        
+        <div class="menu-container">
+            <div class="menu-category">
+                <h3>◆ 佐渡ヶ嶽部屋直伝・お鍋</h3>
+                <ul class="menu-list">
+                    <li><span class="name">ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
+                    <li><span class="name">ソップ炊きちゃんこ鍋（1人前・しょうゆ味）</span><span class="price">2,500円</span></li>
+                    <li><span class="name">塩ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
+                    <li><span class="name">ピリ辛ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
+                    <li><span class="name">もつ鍋（1人前）<small>（塩・ピリ辛・しょうゆ）</small></span><span class="price">2,500円</span></li>
+                    <li><span class="name">魚介入りスペシャルちゃんこ鍋（1人前）</span><span class="price">2,990円</span></li>
+                </ul>
+                <p class="menu-note">※〆の雑炊・ラーメン（各530円）、リゾット（590円※塩のみ）もございます。</p>
+            </div>
+
+            <div class="menu-category">
+                <h3>◆ 炭火串焼き（一皿二串）</h3>
+                <ul class="menu-list">
+                    <li><span class="name">380円均一串<small>（せせり・ねぎま・きも・かわ・ずり・三角など）</small></span><span class="price">各380円</span></li>
+                    <li><span class="name">鳥むね<small>（しお・チーズ・梅じそ）</small></span><span class="price">各400円</span></li>
+                    <li><span class="name">つくね（2串）</span><span class="price">460円</span></li>
+                    <li><span class="name">手羽先</span><span class="price">500円</span></li>
+                    <li><span class="name">豚バラ</span><span class="price">450円</span></li>
+                    <li><span class="name">串焼き盛合わせ（8本）</span><span class="price">1,520円</span></li>
+                </ul>
+            </div>
+
+            <div class="menu-category">
+                <h3>◆ お造り・一品</h3>
+                <ul class="menu-list">
+                    <li><span class="name">鳥むねのたたき</span><span class="price">580円</span></li>
+                    <li><span class="name">鳥のお造り盛合わせ</span><span class="price">1,000円</span></li>
+                    <li><span class="name">名物 琴嵐の手羽先揚げ</span><span class="price">690円</span></li>
+                    <li><span class="name">串カツ5本盛り</span><span class="price">750円</span></li>
+                    <li><span class="name">きもスペシャル / ずりスペシャル<small>（半生炙り）</small></span><span class="price">各600円</span></li>
+                    <li><span class="name">鳥ごぼう釜めし</span><span class="price">890円</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="access" class="access-section">
+        <h2 class="section-title">アクセス・店舗情報</h2>
+        <div class="access-container">
+            <div class="map-wrapper">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3279.9142145326715!2d135.51347047634676!3d34.707328083040375!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6000e6c0adc18c7d%3A0x35da33f93a8fbc65!2z5Zyw6bOf5a62IOe0pOWymSDlpKnmuI_luZc!5e0!3m2!1sja!2sjp!4v1713500000000!5m2!1sja!2sjp" 
+                    width="600" 
+                    height="450" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+            
+            <div class="access-info">
+                <h3>地鶏家 琴嵐 <span class="branch">天満店</span></h3>
+                <p class="address">📍 〒530-0041 大阪府大阪市北区天神橋４丁目１０−５ 上野ビル</p>
+                <p class="station">🚉 天神橋筋六丁目駅・天満駅から徒歩すぐ</p>
+                <p class="tel">📞 06-6882-0612</p>
+                
+                <a href="https://tabelog.com/osaka/A2701/A270103/27041764/" target="_blank" rel="noopener noreferrer" class="btn-reservation">
+                    <span>予約・空席状況（食べログへ）</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer id="info" class="site-footer">
+        <div class="footer-container">
+            <h2 class="footer-logo">地鶏家 琴嵐 天満店</h2>
+            <div class="footer-info">
+                <p class="tel">TEL：<strong>06-6882-0612</strong></p>
+                <p class="address">大阪府大阪市北区天満エリア（天神橋筋六丁目・天満駅近く）</p>
+                <p class="open-hours">※営業時間・定休日はお電話にてお問い合わせください。</p>
+            </div>
+            <p class="copyright">&copy; 地鶏家 琴嵐 天満店 All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ">
+        🎮 琴嵐 ゲイム
     </div>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+    <div id="game-modal" class="game-modal-overlay">
+        <div class="game-modal-content">
+            <span id="game-close-btn" class="game-close-btn">&times;</span>
+            <canvas id="gameCanvas" width="360" height="500"></canvas>
+            <div class="game-mobile-instruction">
+                PC: ← →キー（移動） / Space（連射）<br>
+                スマホ: 画面スライド（移動＆自動連射）
+            </div>
+        </div>
+    </div>
 
-const gameWidth = canvas.width;
-const gameHeight = canvas.height;
+    <script src="game.js"></script>
+    <script>
+        // ポップアップの開閉制御
+        const trigger = document.getElementById('game-trigger');
+        const modal = document.getElementById('game-modal');
+        const closeBtn = document.getElementById('game-close-btn');
 
-// ==========================================
-// 🎨 ドット絵データ (8x8ピクセル)
-// ==========================================
-
-// 1. 自機：相撲取り
-const sumoSprite = [
-    [0, 0, 2, 2, 2, 2, 0, 0],
-    [0, 2, 1, 1, 1, 1, 2, 0],
-    [0, 1, 2, 1, 1, 2, 1, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [1, 1, 1, 2, 2, 1, 1, 1],
-    [0, 1, 3, 3, 3, 3, 1, 0],
-    [0, 0, 2, 0, 0, 2, 0, 0],
-    [0, 2, 2, 0, 0, 2, 2, 0]
-];
-
-// 弾A：手羽先
-const tebasakiSprite = [
-    [0, 0, 0, 0, 0, 1, 1, 0],
-    [0, 0, 0, 0, 1, 1, 0, 0],
-    [0, 0, 2, 2, 2, 0, 0, 0],
-    [0, 2, 2, 2, 2, 2, 0, 0],
-    [2, 2, 2, 2, 2, 2, 0, 0],
-    [2, 2, 2, 2, 2, 0, 0, 0],
-    [0, 2, 2, 2, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0]
-];
-
-// 弾B：ちゃんこ鍋
-const chankoSprite = [
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 2, 0, 3, 2, 0, 0],
-    [0, 2, 2, 3, 3, 2, 2, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0]
-];
-
-// 弾C：おにぎり
-const onigiriSprite = [
-    [0, 0, 0, 1, 1, 0, 0, 0],
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [1, 1, 1, 2, 2, 1, 1, 1],
-    [1, 1, 1, 2, 2, 1, 1, 1],
-    [1, 1, 1, 2, 2, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 0, 0]
-];
-
-// 敵A：怒った焼き鳥（1: 赤い鶏肉, 2: 緑のネギ, 3: 串）
-const yakitoriSprite = [
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 1, 1, 0, 0, 1, 1, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 0, 2, 2, 2, 2, 0, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 1, 1, 0, 0, 1, 1, 0],
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 0, 0, 3, 3, 0, 0, 0]
-];
-
-// 敵B：たこ焼きインベーダー（1: たこ焼き茶色, 2: ソース黒, 3: 青のり緑, 4: タコの足ピンク）
-const takoyakiSprite = [
-    [0, 0, 1, 1, 1, 1, 0, 0],
-    [0, 1, 2, 2, 1, 3, 1, 0],
-    [1, 2, 2, 2, 2, 1, 3, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 4, 0, 4, 0, 4, 0, 4],
-    [4, 0, 4, 0, 4, 0, 4, 0]
-];
-
-// ==========================================
-// ⚙️ ゲームオブジェクト・変数設定
-// ==========================================
-
-const pixelSize = 5; 
-const sumoWidth = sumoSprite[0].length * pixelSize; // 40px
-const sumoHeight = sumoSprite.length * pixelSize;
-
-const bulletSize = 3; 
-const bulletWidth = 8 * bulletSize;
-const bulletHeight = 8 * bulletSize;
-
-const enemySize = 4; // 敵は少し大きめにする (32px)
-const enemyWidth = 8 * enemySize;
-const enemyHeight = 8 * enemySize;
-
-// プレイヤー
-let player = {
-    x: gameWidth / 2 - sumoWidth / 2,
-    y: gameHeight - sumoHeight - 20,
-    speed: 6,
-    isDragging: false
-};
-
-// ゲーム状態
-let bullets = [];
-let enemies = [];
-let score = 0;
-let gameOver = false;
-let shootCooldown = 0;
-const shootInterval = 15;
-
-// 敵の移動方向とスピード
-let enemyDirection = 1; // 1: 右, -1: 左
-let enemySpeed = 1.5;
-let enemyStepDown = 15; // 端に着いたときに下に降りる量
-
-const keys = {};
-
-// ==========================================
-// 👾 敵キャラクターを生成する関数
-// ==========================================
-function spawnEnemies() {
-    enemies = [];
-    const rows = 3; // 縦に3列
-    const cols = 6; // 横に6列
-    const startX = 30;
-    const startY = 50;
-    const spacingX = 50;
-    const spacingY = 45;
-
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            enemies.push({
-                x: startX + c * spacingX,
-                y: startY + r * spacingY,
-                type: r % 2, // 列ごと、または段ごとに種類を変える
-                alive: true
-            });
-        }
-    }
-}
-
-// ==========================================
-// 🕹️ 操作イベントの登録
-// ==========================================
-
-window.addEventListener('keydown', (e) => {
-    if (gameOver) {
-        resetGame(); // ゲームオーバー中にキーを押したらリセット
-    }
-    keys[e.code] = true;
-});
-window.addEventListener('keyup', (e) => keys[e.code] = false);
-
-canvas.addEventListener('touchstart', (e) => {
-    if (gameOver) {
-        resetGame();
-        return;
-    }
-    player.isDragging = true;
-    handleTouch(e);
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    if (player.isDragging) {
-        handleTouch(e);
-    }
-}, { passive: false });
-
-canvas.addEventListener('touchend', () => {
-    player.isDragging = false;
-});
-
-function handleTouch(e) {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touchX = (e.touches[0].clientX - rect.left) * (gameWidth / rect.width);
-    
-    player.x = touchX - sumoWidth / 2;
-    if (player.x < 0) player.x = 0;
-    if (player.x > gameWidth - sumoWidth) player.x = gameWidth - sumoWidth;
-}
-
-// 弾（フード）を発射
-function shoot() {
-    if (shootCooldown > 0) return;
-
-    const type = Math.floor(Math.random() * 3);
-    bullets.push({
-        x: player.x + sumoWidth / 2 - bulletWidth / 2,
-        y: player.y - bulletHeight,
-        speed: 8,
-        type: type
-    });
-
-    shootCooldown = shootInterval;
-}
-
-// ==========================================
-// 💥 衝突検知（当たり判定）
-// ==========================================
-function checkCollision(rect1, rect2) {
-    return rect1.x < rect2.x + rect2.width &&
-           rect1.x + rect1.width > rect2.x &&
-           rect1.y < rect2.y + rect2.height &&
-           rect1.y + rect1.height > rect2.y;
-}
-
-// ==========================================
-// 🎨 各種描画関数
-// ==========================================
-
-// 自機の描画
-function drawPlayer() {
-    for (let r = 0; r < sumoSprite.length; r++) {
-        for (let c = 0; c < sumoSprite[r].length; c++) {
-            const pixel = sumoSprite[r][c];
-            if (pixel === 0) continue;
-
-            if (pixel === 1) ctx.fillStyle = '#f4cc9f'; 
-            else if (pixel === 2) ctx.fillStyle = '#fcfaf2'; 
-            else if (pixel === 3) ctx.fillStyle = '#9e2a2b'; 
-
-            ctx.fillRect(player.x + (c * pixelSize), player.y + (r * pixelSize), pixelSize, pixelSize);
-        }
-    }
-}
-
-// 弾の描画
-function drawBullet(bullet) {
-    let sprite;
-    if (bullet.type === 0) sprite = tebasakiSprite;
-    else if (bullet.type === 1) sprite = chankoSprite;
-    else sprite = onigiriSprite;
-
-    for (let r = 0; r < sprite.length; r++) {
-        for (let c = 0; c < sprite[r].length; c++) {
-            const pixel = sprite[r][c];
-            if (pixel === 0) continue;
-
-            if (bullet.type === 0) {
-                ctx.fillStyle = (pixel === 1) ? '#ffffff' : '#b27a3d';
-            } else if (bullet.type === 1) {
-                if (pixel === 1) ctx.fillStyle = '#e76f51';
-                else if (pixel === 2) ctx.fillStyle = '#2a9d8f';
-                else ctx.fillStyle = '#e9c46a';
-            } else {
-                ctx.fillStyle = (pixel === 1) ? '#ffffff' : '#2c2520';
+        // 開く
+        trigger.addEventListener('click', () => {
+            modal.classList.add('active');
+            // game.js に書いた初期化関数を呼び出してゲーム起動！
+            if (typeof initGame === 'function') {
+                initGame();
             }
+        });
 
-            ctx.fillRect(bullet.x + (c * bulletSize), bullet.y + (r * bulletSize), bulletSize, bulletSize);
-        }
-    }
-}
-
-// 敵の描画
-function drawEnemy(enemy) {
-    let sprite = (enemy.type === 0) ? yakitoriSprite : takoyakiSprite;
-
-    for (let r = 0; r < sprite.length; r++) {
-        for (let c = 0; c < sprite[r].length; c++) {
-            const pixel = sprite[r][c];
-            if (pixel === 0) continue;
-
-            if (enemy.type === 0) {
-                // 焼き鳥の色
-                if (pixel === 1) ctx.fillStyle = '#e76f51'; // 鶏肉：オレンジ赤
-                else if (pixel === 2) ctx.fillStyle = '#8ab17d'; // ネギ：黄緑
-                else ctx.fillStyle = '#e9c46a'; // 串：きつね色
-            } else {
-                // たこ焼きの色
-                if (pixel === 1) ctx.fillStyle = '#cb997e'; // 生地の茶色
-                else if (pixel === 2) ctx.fillStyle = '#3d348b'; // ソース：紺色
-                else if (pixel === 3) ctx.fillStyle = '#8ab17d'; // 青のり：緑
-                else ctx.fillStyle = '#ffb5a7'; // 足：ピンク
+        // 閉じる
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+            // ゲームループとキーイベントを安全に停止
+            if (typeof window.stopGame === 'function') {
+                window.stopGame();
             }
+        });
 
-            ctx.fillRect(enemy.x + (c * enemySize), enemy.y + (r * enemySize), enemySize, enemySize);
-        }
-    }
-}
-
-// 画面にスコアを表示
-function drawScore() {
-    ctx.fillStyle = '#fcfaf2';
-    ctx.font = 'bold 16px "Courier New", monospace';
-    ctx.fillText(`SCORE: ${score}`, 15, 30);
-}
-
-// ゲームオーバー表示
-function drawGameOver() {
-    ctx.fillStyle = 'rgba(26, 21, 18, 0.85)';
-    ctx.fillRect(0, 0, gameWidth, gameHeight);
-
-    ctx.fillStyle = '#9e2a2b';
-    ctx.font = 'bold 28px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('ゲームオーバー', gameWidth / 2, gameHeight / 2 - 20);
-
-    ctx.fillStyle = '#fcfaf2';
-    ctx.font = '14px sans-serif';
-    ctx.fillText('画面をタッチ / キー入力で再挑戦', gameWidth / 2, gameHeight / 2 + 30);
-    ctx.textAlign = 'left'; // リセット
-}
-
-// ==========================================
-// 🔄 メインアップデート処理
-// ==========================================
-function update() {
-    if (gameOver) {
-        drawGameOver();
-        requestAnimationFrame(update);
-        return;
-    }
-
-    ctx.clearRect(0, 0, gameWidth, gameHeight);
-
-    // 1. キーボード移動（PC用）
-    if (keys['ArrowLeft'] || keys['KeyA']) {
-        player.x -= player.speed;
-        if (player.x < 0) player.x = 0;
-    }
-    if (keys['ArrowRight'] || keys['KeyD']) {
-        player.x += player.speed;
-        if (player.x > gameWidth - sumoWidth) player.x = gameWidth - sumoWidth;
-    }
-
-    // 2. 自動連射判定
-    if (player.isDragging || keys['Space']) {
-        shoot();
-    }
-    if (shootCooldown > 0) shootCooldown--;
-
-    // 3. 弾の処理
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        bullets[i].y -= bullets[i].speed;
-
-        if (bullets[i].y < -bulletHeight) {
-            bullets.splice(i, 1);
-            continue;
-        }
-        drawBullet(bullets[i]);
-    }
-
-    // 4. 敵の移動と描画
-    let touchWall = false;
-    for (let i = 0; i < enemies.length; i++) {
-        enemies[i].x += enemySpeed * enemyDirection;
-
-        // 左右の壁に当たったか判定
-        if (enemies[i].x < 0 || enemies[i].x > gameWidth - enemyWidth) {
-            touchWall = true;
-        }
-
-        // プレイヤーのいる高さ（下部）に敵が侵入したらゲームオーバー
-        if (enemies[i].y + enemyHeight > player.y) {
-            gameOver = true;
-        }
-    }
-
-    // 壁に当たったら方向転換して一段下がる
-    if (touchWall) {
-        enemyDirection *= -1;
-        for (let i = 0; i < enemies.length; i++) {
-            enemies[i].y += enemyStepDown;
-        }
-    }
-
-    // 敵の描画
-    for (let i = 0; i < enemies.length; i++) {
-        drawEnemy(enemies[i]);
-    }
-
-    // 5. 当たり判定の実行
-    for (let b = bullets.length - 1; b >= 0; b--) {
-        for (let e = enemies.length - 1; e >= 0; e--) {
-            const bulletRect = { x: bullets[b].x, y: bullets[b].y, width: bulletWidth, height: bulletHeight };
-            const enemyRect = { x: enemies[e].x, y: enemies[e].y, width: enemyWidth, height: enemyHeight };
-
-            if (checkCollision(bulletRect, enemyRect)) {
-                // 衝突！弾と敵を消す
-                bullets.splice(b, 1);
-                enemies.splice(e, 1);
-                score += 100; // 1体100点
-                break; // 次の弾の処理へ
+        // 背景クリックでも閉じる
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                if (typeof window.stopGame === 'function') {
+                    window.stopGame();
+                }
             }
-        }
-    }
-
-    // 6. 全滅させたら次のウェーブへ（敵を再配置）
-    if (enemies.length === 0) {
-        enemySpeed += 0.3; // 少しだけ敵のスピードを上げる
-        spawnEnemies();
-    }
-
-    // 7. 自機の描画 ＆ スコア表示
-    drawPlayer();
-    drawScore();
-
-    requestAnimationFrame(update);
-}
-
-// リセット処理
-function resetGame() {
-    score = 0;
-    gameOver = false;
-    enemySpeed = 1.5;
-    enemyDirection = 1;
-    bullets = [];
-    player.x = gameWidth / 2 - sumoWidth / 2;
-    spawnEnemies();
-}
-
-// ゲームの開始
-spawnEnemies();
-update();
-</script>
+        });
+    </script>
 
 </body>
 </html>
