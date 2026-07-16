@@ -2,105 +2,168 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地鶏家 琴嵐 天満店 | 佐渡ヶ嶽部屋直伝ちゃんこ鍋・炭火やきとり</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Sawarabi+Mincho&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>琴嵐ミニゲームテスト</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #fcfaf2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: sans-serif;
+            touch-action: none; /* スマホでの画面スクロールやピンチズームを無効化してゲームを遊びやすくする */
+        }
+        canvas {
+            background-color: #1a1512; /* 土俵・夜をイメージした暗い背景 */
+            border: 4px double #9e2a2b; /* 朱色の渋い額縁 */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            max-width: 100%;
+            height: auto;
+        }
+        .instruction {
+            margin-top: 15px;
+            color: #2c2520;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-    <header class="site-header">
-        <div class="header-container">
-            <h1 class="site-logo">地鶏家 琴嵐 <span class="branch">天満店</span></h1>
-            <nav class="header-nav">
-                <ul>
-                    <li><a href="#about">こだわり</a></li>
-                    <li><a href="#menu">お品書き</a></li>
-                    <li><a href="#info">店舗情報</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <canvas id="gameCanvas" width="360" height="500"></canvas>
+    <div class="instruction">
+        【操作方法】<br>
+        PC: 左右矢印キー(← →) / スマホ: 画面をタッチして左右にスライド
+    </div>
 
-    <section class="hero-section">
-        <div class="hero-image-wrapper">
-            <img src="photo2.png" alt="地鶏家 琴嵐 店舗外観" class="hero-image">
-        </div>
-        <div class="hero-text">
-            <p class="catchphrase">暖簾の先に、<br>佐渡ヶ嶽部屋直伝の味が待っている。</p>
-        </div>
-    </section>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    <section id="about" class="about-section">
-        <h2 class="section-title">琴嵐のこだわり</h2>
-        <div class="about-container">
-            <div class="about-card">
-                <img src="photo1.png" alt="佐渡ヶ嶽部屋直伝のスープ" class="about-img">
-                <h3>直伝の至高スープ</h3>
-                <p>鶏ガラをふんだんに使い、じっくりと炊き出したコクのあるスープ。一口飲めば体に染み渡る、本物のちゃんこ・もつ鍋をどうぞ。</p>
-            </div>
-            <div class="about-card">
-                <img src="photo3.png" alt="スタミナチャージ" class="about-img">
-                <h3>元力士の店主が炊き出す</h3>
-                <p>同期には錚々たるメンバー。お相撲さんしか知らない「本物の味」と「世界の話」を、美味しいお酒と共にお楽しみいただけます。</p>
-            </div>
-        </div>
-    </section>
+// ゲームの基本設定
+const gameWidth = canvas.width;
+const gameHeight = canvas.height;
 
-    <section id="menu" class="menu-section">
-        <h2 class="section-title">お品書き</h2>
-        
-        <div class="menu-container">
-            <div class="menu-category">
-                <h3>◆ 佐渡ヶ嶽部屋直伝・お鍋</h3>
-                <ul class="menu-list">
-                    <li><span class="name">ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">ソップ炊きちゃんこ鍋（1人前・しょうゆ味）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">塩ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">ピリ辛ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">もつ鍋（1人前）<small>（塩・ピリ辛・しょうゆ）</small></span><span class="price">2,500円</span></li>
-                    <li><span class="name">魚介入りスペシャルちゃんこ鍋（1人前）</span><span class="price">2,990円</span></li>
-                </ul>
-                <p class="menu-note">※〆の雑炊・ラーメン（各530円）、リゾット（590円※塩のみ）もございます。</p>
-            </div>
+// ==========================================
+// 🎨 自機（相撲取り）のドット絵データ (8x8ピクセル)
+// 0: 透明, 1: 肌色(#f4cc9f), 2: 髪/まわし(#2c2520), 3: 朱色まわしアクセント(#9e2a2b)
+// ==========================================
+const sumoSprite = [
+    [0, 0, 2, 2, 2, 2, 0, 0],
+    [0, 2, 1, 1, 1, 1, 2, 0],
+    [0, 1, 2, 1, 1, 2, 1, 0],
+    [0, 1, 1, 1, 1, 1, 1, 0],
+    [1, 1, 1, 2, 2, 1, 1, 1],
+    [0, 1, 3, 3, 3, 3, 1, 0],
+    [0, 0, 2, 0, 0, 2, 0, 0],
+    [0, 2, 2, 0, 0, 2, 2, 0]
+];
 
-            <div class="menu-category">
-                <h3>◆ 炭火串焼き（一皿二串）</h3>
-                <ul class="menu-list">
-                    <li><span class="name">380円均一串<small>（せせり・ねぎま・きも・かわ・ずり・三角など）</small></span><span class="price">各380円</span></li>
-                    <li><span class="name">鳥むね<small>（しお・チーズ・梅じそ）</small></span><span class="price">各400円</span></li>
-                    <li><span class="name">つくね（2串）</span><span class="price">460円</span></li>
-                    <li><span class="name">手羽先</span><span class="price">500円</span></li>
-                    <li><span class="name">豚バラ</span><span class="price">450円</span></li>
-                    <li><span class="name">串焼き盛合わせ（8本）</span><span class="price">1,520円</span></li>
-                </ul>
-            </div>
+// 1マスのサイズ（ドットの細かさ）
+const pixelSize = 5; 
+const sumoWidth = sumoSprite[0].length * pixelSize; // 40px
+const sumoHeight = sumoSprite.length * pixelSize;    // 40px
 
-            <div class="menu-category">
-                <h3>◆ お造り・一品</h3>
-                <ul class="menu-list">
-                    <li><span class="name">鳥むねのたたき</span><span class="price">580円</span></li>
-                    <li><span class="name">鳥のお造り盛合わせ</span><span class="price">1,000円</span></li>
-                    <li><span class="name">名物 琴嵐の手羽先揚げ</span><span class="price">690円</span></li>
-                    <li><span class="name">串カツ5本盛り</span><span class="price">750円</span></li>
-                    <li><span class="name">きもスペシャル / ずりスペシャル<small>（半生炙り）</small></span><span class="price">各600円</span></li>
-                    <li><span class="name">鳥ごぼう釜めし</span><span class="price">890円</span></li>
-                </ul>
-            </div>
-        </div>
-    </section>
+// 力士（プレイヤー）オブジェクト
+const player = {
+    x: gameWidth / 2 - sumoWidth / 2, // 初期位置は中央
+    y: gameHeight - sumoHeight - 20,    // 画面下部
+    speed: 5,
+    isDragging: false
+};
 
-    <footer id="info" class="site-footer">
-        <div class="footer-container">
-            <h2 class="footer-logo">地鶏家 琴嵐 天満店</h2>
-            <div class="footer-info">
-                <p class="tel">TEL：<strong>06-6882-0612</strong></p>
-                <p class="address">大阪府大阪市北区天満エリア（天神橋筋六丁目・天満駅近く）</p>
-                <p class="open-hours">※営業時間・定休日はお電話にてお問い合わせください。</p>
-            </div>
-            <p class="copyright">&copy; 地鶏家 琴嵐 天満店 All Rights Reserved.</p>
-        </div>
-    </footer>
+// キーボード入力の状態
+const keys = {};
+
+// ==========================================
+// 🕹️ 操作イベントの登録
+// ==========================================
+
+// PC: キーボード
+window.addEventListener('keydown', (e) => keys[e.code] = true);
+window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+// スマホ: タッチ操作
+canvas.addEventListener('touchstart', (e) => {
+    player.isDragging = true;
+    handleTouch(e);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    if (player.isDragging) {
+        handleTouch(e);
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+    player.isDragging = false;
+});
+
+// タッチ座標をプレイヤーのx座標に反映する関数
+function handleTouch(e) {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    // キャンバス上の相対的なタッチX座標を計算
+    const touchX = (e.touches[0].clientX - rect.left) * (gameWidth / rect.width);
+    
+    // 力士の中心が指の位置に来るように調整し、画面外に出ないように制限
+    player.x = touchX - sumoWidth / 2;
+    if (player.x < 0) player.x = 0;
+    if (player.x > gameWidth - sumoWidth) player.x = gameWidth - sumoWidth;
+}
+
+// ==========================================
+// 🎨 描画処理
+// ==========================================
+
+// 力士（ドット絵）を描画する関数
+function drawPlayer() {
+    for (let r = 0; r < sumoSprite.length; r++) {
+        for (let c = 0; c < sumoSprite[r].length; c++) {
+            const pixel = sumoSprite[r][c];
+            if (pixel === 0) continue; // 0は透明なので描画スキップ
+
+            if (pixel === 1) ctx.fillStyle = '#f4cc9f'; // 肌色
+            else if (pixel === 2) ctx.fillStyle = '#fcfaf2'; // まげ・足（背景が暗いので見やすい色に調整）
+            else if (pixel === 3) ctx.fillStyle = '#9e2a2b'; // まわしの朱色
+
+            // 指定位置にドットを描画
+            ctx.fillRect(player.x + (c * pixelSize), player.y + (r * pixelSize), pixelSize, pixelSize);
+        }
+    }
+}
+
+// ==========================================
+// 🔄 メインループ（ゲームを動かし続ける仕組み）
+// ==========================================
+function update() {
+    // 画面をクリア
+    ctx.clearRect(0, 0, gameWidth, gameHeight);
+
+    // キーボード移動（PC用）
+    if (keys['ArrowLeft'] || keys['KeyA']) {
+        player.x -= player.speed;
+        if (player.x < 0) player.x = 0;
+    }
+    if (keys['ArrowRight'] || keys['KeyD']) {
+        player.x += player.speed;
+        if (player.x > gameWidth - sumoWidth) player.x = gameWidth - sumoWidth;
+    }
+
+    // 描画を実行
+    drawPlayer();
+
+    // 次のフレームを呼び出す
+    requestAnimationFrame(update);
+}
+
+// ゲームスタート
+update();
+</script>
 
 </body>
 </html>
