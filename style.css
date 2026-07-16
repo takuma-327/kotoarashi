@@ -615,102 +615,75 @@ li {
 }
 
 /* 各カードの初期状態（非表示） */
+/* 各カードのレイアウト（横並びにする） */
 .slot-card {
     display: none;
     position: absolute;
-    width: 90%;
+    width: 95%;
     height: 90%;
     color: #fcfaf2;
-    padding: 15px;
+    padding: 10px;
     box-sizing: border-box;
     text-align: left;
+    display: flex;
+    flex-direction: row; /* 横並び */
+    align-items: center;
+    gap: 15px; /* 写真とテキストの間隔 */
+}
+
+.slot-card.active {
+    display: flex;
+}
+
+/* 左側：写真エリア */
+.slot-card-left {
+    flex: 0 0 120px; /* 横幅120pxで固定 */
+    height: 120px;
+    border: 2px solid #d4af37; /* 金の縁取り */
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.slot-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 縦横比を保って枠いっぱいにトリミング */
+}
+
+/* 右側：テキストエリア */
+.slot-card-right {
+    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
-/* アクティブなカードだけ表示 */
-.slot-card.active {
-    display: flex;
-}
-
-/* バッジ（カードタイプ表示） */
-.card-badge {
-    align-self: flex-start;
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: bold;
-    border-radius: 3px;
-    margin-bottom: 10px;
-    color: #fff;
-}
-
-.card-badge.gold { background-color: #d4af37; }
-.card-badge.red { background-color: #9e2a2b; }
-.card-badge.green { background-color: #2a9d8f; }
-
-/* レインボーに輝く超激レア演出 */
-@keyframes rainbow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-.card-badge.rainbow {
-    background: linear-gradient(270deg, #ff0055, #00ffcc, #9e2a2b, #d4af37);
-    background-size: 800% 800%;
-    animation: rainbow 4s ease infinite;
-}
-
+/* テキストサイズの微調整（枠に収まるように少し小さめに） */
 .card-title {
-    font-size: 1.4rem;
+    font-size: 1.15rem;
     font-weight: bold;
     color: #f4a261;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
+    line-height: 1.3;
 }
 
 .card-text {
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: #ddd;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #ccc;
+    margin: 0;
 }
 
-/* 特別枠デザイン */
-.special-card .card-title {
-    color: #ffd700; /* ゴールド */
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-}
-
-/* ボタンのデザイン */
-.btn-slot {
-    width: 100%;
-    padding: 15px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    transition: all 0.2s ease;
-    border: 3px solid #2c2520;
-}
-
-.btn-slot.start {
-    background-color: #f4a261;
-    color: #2c2520;
-}
-
-.btn-slot.start:hover {
-    background-color: #fcfaf2;
-}
-
-/* ストップボタンはパチンコのストップボタンばりに赤く明滅 */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.03); background-color: #d62828; }
-    100% { transform: scale(1); }
-}
-.btn-slot.stop {
-    background-color: #9e2a2b;
-    color: #fcfaf2;
-    animation: pulse 1s infinite;
+/* スマホ用のレイアウト調整（写真を小さくして文字スペースを確保） */
+@media (max-width: 480px) {
+    .slot-card-left {
+        flex: 0 0 80px; /* スマホでは写真を80pxに縮小 */
+        height: 80px;
+    }
+    .card-title {
+        font-size: 1rem;
+    }
+    .card-text {
+        font-size: 0.75rem;
+    }
 }
