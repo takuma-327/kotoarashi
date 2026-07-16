@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>琴嵐ミニゲームテスト - 投げる力士</title>
+    <title>琴嵐ミニゲームテスト - 敵襲来！</title>
     <style>
         body {
             margin: 0;
@@ -14,7 +14,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            font-family: sans-serif;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
             touch-action: none;
         }
         canvas {
@@ -29,6 +29,7 @@
             color: #2c2520;
             font-size: 14px;
             text-align: center;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -37,8 +38,8 @@
     <canvas id="gameCanvas" width="360" height="500"></canvas>
     <div class="instruction">
         【操作方法】<br>
-        PC: 左右キーで移動（スペースキー長押しで連射）<br>
-        スマホ: 画面タッチ＆スライド（触っている間、自動連射）
+        PC: 左右キーで移動（スペースキーで連射）<br>
+        スマホ: 画面スライドで移動＆自動連射
     </div>
 
 <script>
@@ -49,7 +50,7 @@ const gameWidth = canvas.width;
 const gameHeight = canvas.height;
 
 // ==========================================
-// 🎨 キャラクター・アイテムのドット絵データ (8x8ピクセル)
+// 🎨 ドット絵データ (8x8ピクセル)
 // ==========================================
 
 // 1. 自機：相撲取り
@@ -64,7 +65,7 @@ const sumoSprite = [
     [0, 2, 2, 0, 0, 2, 2, 0]
 ];
 
-// 2. 弾A：手羽先（1: 白い骨, 2: 茶色い肉）
+// 弾A：手羽先
 const tebasakiSprite = [
     [0, 0, 0, 0, 0, 1, 1, 0],
     [0, 0, 0, 0, 1, 1, 0, 0],
@@ -76,7 +77,7 @@ const tebasakiSprite = [
     [0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-// 3. 弾B：ちゃんこ鍋（1: 赤い鍋, 2: 緑の野菜, 3: 黄色い豆腐的な具材）
+// 弾B：ちゃんこ鍋
 const chankoSprite = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 2, 0, 3, 2, 0, 0],
@@ -88,7 +89,7 @@ const chankoSprite = [
     [0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-// 4. 弾C：おおにぎり（1: 白い飯, 2: 黒い海苔）
+// 弾C：おにぎり
 const onigiriSprite = [
     [0, 0, 0, 1, 1, 0, 0, 0],
     [0, 0, 1, 1, 1, 1, 0, 0],
@@ -100,41 +101,110 @@ const onigiriSprite = [
     [0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-// 1マスのサイズ（ドットの大きさ）
+// 敵A：怒った焼き鳥（1: 赤い鶏肉, 2: 緑のネギ, 3: 串）
+const yakitoriSprite = [
+    [0, 0, 1, 1, 1, 1, 0, 0],
+    [0, 1, 1, 0, 0, 1, 1, 0],
+    [0, 1, 1, 1, 1, 1, 1, 0],
+    [0, 0, 2, 2, 2, 2, 0, 0],
+    [0, 1, 1, 1, 1, 1, 1, 0],
+    [0, 1, 1, 0, 0, 1, 1, 0],
+    [0, 0, 1, 1, 1, 1, 0, 0],
+    [0, 0, 0, 3, 3, 0, 0, 0]
+];
+
+// 敵B：たこ焼きインベーダー（1: たこ焼き茶色, 2: ソース黒, 3: 青のり緑, 4: タコの足ピンク）
+const takoyakiSprite = [
+    [0, 0, 1, 1, 1, 1, 0, 0],
+    [0, 1, 2, 2, 1, 3, 1, 0],
+    [1, 2, 2, 2, 2, 1, 3, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 1, 1, 1, 1, 1, 1, 0],
+    [0, 4, 0, 4, 0, 4, 0, 4],
+    [4, 0, 4, 0, 4, 0, 4, 0]
+];
+
+// ==========================================
+// ⚙️ ゲームオブジェクト・変数設定
+// ==========================================
+
 const pixelSize = 5; 
 const sumoWidth = sumoSprite[0].length * pixelSize; // 40px
 const sumoHeight = sumoSprite.length * pixelSize;
 
-// 弾（フード）のサイズ
-const bulletSize = 3; // 弾は少し小さめにする (8x8ピクセル * 3 = 24px)
+const bulletSize = 3; 
 const bulletWidth = 8 * bulletSize;
 const bulletHeight = 8 * bulletSize;
 
-// 力士（プレイヤー）オブジェクト
-const player = {
+const enemySize = 4; // 敵は少し大きめにする (32px)
+const enemyWidth = 8 * enemySize;
+const enemyHeight = 8 * enemySize;
+
+// プレイヤー
+let player = {
     x: gameWidth / 2 - sumoWidth / 2,
     y: gameHeight - sumoHeight - 20,
     speed: 6,
     isDragging: false
 };
 
-// 弾を管理する配列
+// ゲーム状態
 let bullets = [];
-
-// 連射速度の制御用カウンター
+let enemies = [];
+let score = 0;
+let gameOver = false;
 let shootCooldown = 0;
-const shootInterval = 15; // 値が小さいほど連射が早くなる
+const shootInterval = 15;
+
+// 敵の移動方向とスピード
+let enemyDirection = 1; // 1: 右, -1: 左
+let enemySpeed = 1.5;
+let enemyStepDown = 15; // 端に着いたときに下に降りる量
 
 const keys = {};
+
+// ==========================================
+// 👾 敵キャラクターを生成する関数
+// ==========================================
+function spawnEnemies() {
+    enemies = [];
+    const rows = 3; // 縦に3列
+    const cols = 6; // 横に6列
+    const startX = 30;
+    const startY = 50;
+    const spacingX = 50;
+    const spacingY = 45;
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            enemies.push({
+                x: startX + c * spacingX,
+                y: startY + r * spacingY,
+                type: r % 2, // 列ごと、または段ごとに種類を変える
+                alive: true
+            });
+        }
+    }
+}
 
 // ==========================================
 // 🕹️ 操作イベントの登録
 // ==========================================
 
-window.addEventListener('keydown', (e) => keys[e.code] = true);
+window.addEventListener('keydown', (e) => {
+    if (gameOver) {
+        resetGame(); // ゲームオーバー中にキーを押したらリセット
+    }
+    keys[e.code] = true;
+});
 window.addEventListener('keyup', (e) => keys[e.code] = false);
 
 canvas.addEventListener('touchstart', (e) => {
+    if (gameOver) {
+        resetGame();
+        return;
+    }
     player.isDragging = true;
     handleTouch(e);
 }, { passive: false });
@@ -159,49 +229,54 @@ function handleTouch(e) {
     if (player.x > gameWidth - sumoWidth) player.x = gameWidth - sumoWidth;
 }
 
-// ==========================================
-// 🚀 弾（食べ物）を発射する関数
-// ==========================================
+// 弾（フード）を発射
 function shoot() {
     if (shootCooldown > 0) return;
 
-    // 手羽先(0)、ちゃんこ(1)、おにぎり(2)をランダムで選ぶ
     const type = Math.floor(Math.random() * 3);
-
     bullets.push({
-        x: player.x + sumoWidth / 2 - bulletWidth / 2, // 自機の真ん中から発射
+        x: player.x + sumoWidth / 2 - bulletWidth / 2,
         y: player.y - bulletHeight,
-        speed: 7, // 上に飛んでいく速度
+        speed: 8,
         type: type
     });
 
-    shootCooldown = shootInterval; // クールダウンを設定
+    shootCooldown = shootInterval;
 }
 
 // ==========================================
-// 🎨 描画処理
+// 💥 衝突検知（当たり判定）
+// ==========================================
+function checkCollision(rect1, rect2) {
+    return rect1.x < rect2.x + rect2.width &&
+           rect1.x + rect1.width > rect2.x &&
+           rect1.y < rect2.y + rect2.height &&
+           rect1.y + rect1.height > rect2.y;
+}
+
+// ==========================================
+// 🎨 各種描画関数
 // ==========================================
 
-// 自機（力士）の描画
+// 自機の描画
 function drawPlayer() {
     for (let r = 0; r < sumoSprite.length; r++) {
         for (let c = 0; c < sumoSprite[r].length; c++) {
             const pixel = sumoSprite[r][c];
             if (pixel === 0) continue;
 
-            if (pixel === 1) ctx.fillStyle = '#f4cc9f'; // 肌色
-            else if (pixel === 2) ctx.fillStyle = '#fcfaf2'; // まげ・足
-            else if (pixel === 3) ctx.fillStyle = '#9e2a2b'; // まわし
+            if (pixel === 1) ctx.fillStyle = '#f4cc9f'; 
+            else if (pixel === 2) ctx.fillStyle = '#fcfaf2'; 
+            else if (pixel === 3) ctx.fillStyle = '#9e2a2b'; 
 
             ctx.fillRect(player.x + (c * pixelSize), player.y + (r * pixelSize), pixelSize, pixelSize);
         }
     }
 }
 
-// 弾（食べ物）の個別描画
+// 弾の描画
 function drawBullet(bullet) {
     let sprite;
-    // 弾のタイプに合わせてドット絵を切り替える
     if (bullet.type === 0) sprite = tebasakiSprite;
     else if (bullet.type === 1) sprite = chankoSprite;
     else sprite = onigiriSprite;
@@ -211,18 +286,14 @@ function drawBullet(bullet) {
             const pixel = sprite[r][c];
             if (pixel === 0) continue;
 
-            // 弾ごとの色塗り
             if (bullet.type === 0) {
-                // 手羽先の色
-                ctx.fillStyle = (pixel === 1) ? '#ffffff' : '#b27a3d'; // 骨：白 / 肉：茶色
+                ctx.fillStyle = (pixel === 1) ? '#ffffff' : '#b27a3d';
             } else if (bullet.type === 1) {
-                // ちゃんこの色
-                if (pixel === 1) ctx.fillStyle = '#e76f51'; // 鍋：オレンジ朱色
-                else if (pixel === 2) ctx.fillStyle = '#2a9d8f'; // 野菜：緑
-                else ctx.fillStyle = '#e9c46a'; // 具材：黄色
+                if (pixel === 1) ctx.fillStyle = '#e76f51';
+                else if (pixel === 2) ctx.fillStyle = '#2a9d8f';
+                else ctx.fillStyle = '#e9c46a';
             } else {
-                // おにぎりの色
-                ctx.fillStyle = (pixel === 1) ? '#ffffff' : '#2c2520'; // 飯：白 / 海苔：黒
+                ctx.fillStyle = (pixel === 1) ? '#ffffff' : '#2c2520';
             }
 
             ctx.fillRect(bullet.x + (c * bulletSize), bullet.y + (r * bulletSize), bulletSize, bulletSize);
@@ -230,13 +301,69 @@ function drawBullet(bullet) {
     }
 }
 
+// 敵の描画
+function drawEnemy(enemy) {
+    let sprite = (enemy.type === 0) ? yakitoriSprite : takoyakiSprite;
+
+    for (let r = 0; r < sprite.length; r++) {
+        for (let c = 0; c < sprite[r].length; c++) {
+            const pixel = sprite[r][c];
+            if (pixel === 0) continue;
+
+            if (enemy.type === 0) {
+                // 焼き鳥の色
+                if (pixel === 1) ctx.fillStyle = '#e76f51'; // 鶏肉：オレンジ赤
+                else if (pixel === 2) ctx.fillStyle = '#8ab17d'; // ネギ：黄緑
+                else ctx.fillStyle = '#e9c46a'; // 串：きつね色
+            } else {
+                // たこ焼きの色
+                if (pixel === 1) ctx.fillStyle = '#cb997e'; // 生地の茶色
+                else if (pixel === 2) ctx.fillStyle = '#3d348b'; // ソース：紺色
+                else if (pixel === 3) ctx.fillStyle = '#8ab17d'; // 青のり：緑
+                else ctx.fillStyle = '#ffb5a7'; // 足：ピンク
+            }
+
+            ctx.fillRect(enemy.x + (c * enemySize), enemy.y + (r * enemySize), enemySize, enemySize);
+        }
+    }
+}
+
+// 画面にスコアを表示
+function drawScore() {
+    ctx.fillStyle = '#fcfaf2';
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.fillText(`SCORE: ${score}`, 15, 30);
+}
+
+// ゲームオーバー表示
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(26, 21, 18, 0.85)';
+    ctx.fillRect(0, 0, gameWidth, gameHeight);
+
+    ctx.fillStyle = '#9e2a2b';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ゲームオーバー', gameWidth / 2, gameHeight / 2 - 20);
+
+    ctx.fillStyle = '#fcfaf2';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('画面をタッチ / キー入力で再挑戦', gameWidth / 2, gameHeight / 2 + 30);
+    ctx.textAlign = 'left'; // リセット
+}
+
 // ==========================================
-// 🔄 メインアップデート
+// 🔄 メインアップデート処理
 // ==========================================
 function update() {
+    if (gameOver) {
+        drawGameOver();
+        requestAnimationFrame(update);
+        return;
+    }
+
     ctx.clearRect(0, 0, gameWidth, gameHeight);
 
-    // PCキーボード移動
+    // 1. キーボード移動（PC用）
     if (keys['ArrowLeft'] || keys['KeyA']) {
         player.x -= player.speed;
         if (player.x < 0) player.x = 0;
@@ -246,36 +373,94 @@ function update() {
         if (player.x > gameWidth - sumoWidth) player.x = gameWidth - sumoWidth;
     }
 
-    // 発射の判定
-    // スマホは画面ドラッグ中（isDraggingがtrue）なら自動連射
-    // PCはスペースキー（Space）が押されていれば自動連射
+    // 2. 自動連射判定
     if (player.isDragging || keys['Space']) {
         shoot();
     }
-
-    // クールダウンを減らす
     if (shootCooldown > 0) shootCooldown--;
 
-    // 弾の移動と描画
+    // 3. 弾の処理
     for (let i = bullets.length - 1; i >= 0; i--) {
-        bullets[i].y -= bullets[i].speed; // 弾を上に動かす
+        bullets[i].y -= bullets[i].speed;
 
-        // 画面外に出た弾を削除（メモリ対策）
         if (bullets[i].y < -bulletHeight) {
             bullets.splice(i, 1);
             continue;
         }
-
         drawBullet(bullets[i]);
     }
 
-    // 自機の描画
+    // 4. 敵の移動と描画
+    let touchWall = false;
+    for (let i = 0; i < enemies.length; i++) {
+        enemies[i].x += enemySpeed * enemyDirection;
+
+        // 左右の壁に当たったか判定
+        if (enemies[i].x < 0 || enemies[i].x > gameWidth - enemyWidth) {
+            touchWall = true;
+        }
+
+        // プレイヤーのいる高さ（下部）に敵が侵入したらゲームオーバー
+        if (enemies[i].y + enemyHeight > player.y) {
+            gameOver = true;
+        }
+    }
+
+    // 壁に当たったら方向転換して一段下がる
+    if (touchWall) {
+        enemyDirection *= -1;
+        for (let i = 0; i < enemies.length; i++) {
+            enemies[i].y += enemyStepDown;
+        }
+    }
+
+    // 敵の描画
+    for (let i = 0; i < enemies.length; i++) {
+        drawEnemy(enemies[i]);
+    }
+
+    // 5. 当たり判定の実行
+    for (let b = bullets.length - 1; b >= 0; b--) {
+        for (let e = enemies.length - 1; e >= 0; e--) {
+            const bulletRect = { x: bullets[b].x, y: bullets[b].y, width: bulletWidth, height: bulletHeight };
+            const enemyRect = { x: enemies[e].x, y: enemies[e].y, width: enemyWidth, height: enemyHeight };
+
+            if (checkCollision(bulletRect, enemyRect)) {
+                // 衝突！弾と敵を消す
+                bullets.splice(b, 1);
+                enemies.splice(e, 1);
+                score += 100; // 1体100点
+                break; // 次の弾の処理へ
+            }
+        }
+    }
+
+    // 6. 全滅させたら次のウェーブへ（敵を再配置）
+    if (enemies.length === 0) {
+        enemySpeed += 0.3; // 少しだけ敵のスピードを上げる
+        spawnEnemies();
+    }
+
+    // 7. 自機の描画 ＆ スコア表示
     drawPlayer();
+    drawScore();
 
     requestAnimationFrame(update);
 }
 
-// ゲームスタート
+// リセット処理
+function resetGame() {
+    score = 0;
+    gameOver = false;
+    enemySpeed = 1.5;
+    enemyDirection = 1;
+    bullets = [];
+    player.x = gameWidth / 2 - sumoWidth / 2;
+    spawnEnemies();
+}
+
+// ゲームの開始
+spawnEnemies();
 update();
 </script>
 
