@@ -100,15 +100,30 @@
         let currentIndex = 0;
         let isSpinning = false;
 
+        // 完全に1枚だけを表示する初期化処理
+        function initSlot() {
+            cards.forEach((card, index) => {
+                if (index === currentIndex) {
+                    card.style.display = 'flex';
+                    card.classList.add('active');
+                } else {
+                    card.style.display = 'none';
+                    card.classList.remove('active');
+                }
+            });
+        }
+
         // 高速シャッフル関数
         function spin() {
-            // 現在のカードを非表示
+            // 現在のカードを非表示にして完全に隠す
+            cards[currentIndex].style.display = 'none';
             cards[currentIndex].classList.remove('active');
             
-            // ランダム、または順番に次のカードを選ぶ（今回は順番ループ）
+            // 次のカードへ
             currentIndex = (currentIndex + 1) % cards.length;
             
-            // 次のカードを表示
+            // 次のカードを完全に表示する
+            cards[currentIndex].style.display = 'flex';
             cards[currentIndex].classList.add('active');
             
             // 画面をフラッシュさせる演出クラスをトグル
@@ -117,12 +132,12 @@
 
         slotBtn.addEventListener('click', () => {
             if (!isSpinning) {
-                // スロット回転開始（0.06秒ごとにシュバババ！と切り替え）
+                // スロット回転開始（100ミリ秒〜130ミリ秒くらいが目押ししやすくておすすめ！）
                 isSpinning = true;
                 slotBtn.textContent = 'ストップ！！！';
                 slotBtn.className = 'btn-slot stop';
                 
-                slotInterval = setInterval(spin, 60); 
+                slotInterval = setInterval(spin, 120); 
             } else {
                 // スロット停止（目押し！）
                 isSpinning = false;
@@ -132,13 +147,16 @@
                 slotBtn.textContent = 'もう一回まわす';
                 slotBtn.className = 'btn-slot start';
                 
-                // 止まったカードが激レアだったら、画面を少し揺らすなどのアツい演出
+                // 止まったカードが激レアだったら、画面を少し揺らす演出
                 if (cards[currentIndex].classList.contains('special-card')) {
                     screen.classList.add('shake');
                     setTimeout(() => screen.classList.remove('shake'), 500);
                 }
             }
         });
+
+        // 最初にページを開いたときに正しく初期化する
+        initSlot();
     </script>
 
     <section id="menu" class="menu-section">
