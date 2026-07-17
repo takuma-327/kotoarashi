@@ -1,7 +1,7 @@
 /* ==========================================================================
    全体設計・リセット
    ========================================================================== */
-   * {
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -187,366 +187,6 @@ li {
 }
 
 /* ==========================================================================
-   お品書き（メニューセクション）
-   ========================================================================== */
-.menu-section {
-    background-color: #f3edd8; /* 少し濃い和風のベージュ */
-    padding: 6rem 2rem;
-}
-
-.menu-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 4rem;
-}
-
-.menu-category {
-    background: #ffffff;
-    padding: 2.5rem;
-    border-radius: 4px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    border-left: 5px solid #9e2a2b;
-}
-
-.menu-category h3 {
-    font-size: 1.4rem;
-    color: #2c2520;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid #e8e2d5;
-    padding-bottom: 0.5rem;
-}
-
-.menu-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 0.8rem 0;
-    border-bottom: 1px dotted #ccc;
-}
-
-.menu-list .name {
-    font-weight: 700;
-}
-
-.menu-list .name small {
-    display: block;
-    font-size: 0.8rem;
-    color: #777;
-    font-weight: normal;
-    margin-top: 0.2rem;
-}
-
-.menu-list .price {
-    font-weight: 700;
-    color: #9e2a2b;
-    white-space: nowrap;
-}
-
-.menu-note {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 1rem;
-    text-align: right;
-}
-
-/* ==========================================================================
-   フッター・店舗情報
-   ========================================================================== */
-.site-footer {
-    background-color: #2c2520;
-    color: #fcfaf2;
-    padding: 4rem 2rem 2rem;
-}
-
-.footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
-}
-
-.footer-logo {
-    font-size: 1.8rem;
-    margin-bottom: 2rem;
-    letter-spacing: 2px;
-}
-
-.footer-info {
-    margin-bottom: 3rem;
-}
-
-.footer-info .tel {
-    font-size: 1.8rem;
-    color: #f4a261;
-    margin-bottom: 1rem;
-}
-
-.footer-info .tel strong {
-    font-family: sans-serif; /* 電話番号は読みやすいゴシック */
-}
-
-.footer-info .address, 
-.footer-info .open-hours {
-    font-size: 0.95rem;
-    color: #ccc;
-    margin-bottom: 0.5rem;
-}
-
-.copyright {
-    font-size: 0.8rem;
-    color: #888;
-    border-top: 1px solid #443a33;
-    padding-top: 2rem;
-}
-
-/* ==========================================================================
-   レスポンシブ対応（スマホ表示）
-   ========================================================================== */
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .hero-section {
-        height: 70vh;
-    }
-
-    .catchphrase {
-        font-size: 1.8rem;
-        max-height: 50vh;
-    }
-
-    .about-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .menu-category {
-        padding: 1.5rem;
-    }
-
-    .menu-list li {
-        font-size: 0.9rem;
-    }
-}
-/* ==========================================================================
-   アクセスセクション（マップ埋め込み）
-   ========================================================================== */
-.access-section {
-    max-width: 1200px;
-    margin: 6rem auto;
-    padding: 0 2rem;
-}
-
-.access-container {
-    display: flex;
-    gap: 4rem;
-    align-items: center;
-}
-
-.map-wrapper {
-    flex: 1;
-    position: relative;
-    width: 100%;
-    padding-top: 56.25%; /* 16:9比率 */
-    border: 4px double #2c2520;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.map-wrapper iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.access-info {
-    flex: 1;
-}
-
-.access-info h3 {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 2px solid #9e2a2b;
-    padding-bottom: 0.5rem;
-}
-
-.access-info p {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-}
-
-.btn-reservation {
-    display: inline-block;
-    margin-top: 1.5rem;
-    background-color: #9e2a2b;
-    color: #fcfaf2 !important;
-    padding: 1rem 2rem;
-    font-weight: bold;
-    border-radius: 4px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    border: 2px solid #9e2a2b;
-}
-
-.btn-reservation:hover {
-    background-color: #fcfaf2;
-    color: #9e2a2b !important;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
-}
-
-/* ==========================================================================
-   🕹️ ゲームポップアップ ＆ 浮遊ボタン
-   ========================================================================== */
-
-/* 右下に固定する浮遊ボタン */
-.game-float-btn {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    background-color: #9e2a2b; /* 渋い朱色 */
-    color: #fcfaf2;
-    padding: 15px 20px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 50px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    z-index: 999;
-    transition: all 0.3s ease;
-    border: 2px solid #fcfaf2;
-    font-family: 'Courier New', Courier, monospace, sans-serif;
-}
-
-.game-float-btn:hover {
-    background-color: #fcfaf2;
-    color: #9e2a2b;
-    transform: scale(1.1);
-}
-
-/* ポップアップの背景（オーバーレイ） */
-.game-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(26, 21, 18, 0.85); /* 暗い焦げ茶透過 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 1000;
-    transition: opacity 0.3s ease;
-}
-
-.game-modal-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* ポップアップのコンテンツ枠 */
-.game-modal-content {
-    background-color: #fcfaf2;
-    padding: 25px;
-    border-radius: 8px;
-    position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 95%;
-}
-
-.game-modal-content canvas {
-    background-color: #1a1512;
-    border: 4px double #9e2a2b;
-    max-width: 100%;
-    height: auto;
-}
-
-/* 閉じる（×）ボタン */
-.game-close-btn {
-    position: absolute;
-    top: -40px;
-    right: 0;
-    font-size: 35px;
-    color: #fcfaf2;
-    cursor: pointer;
-    transition: color 0.3s;
-}
-
-.game-close-btn:hover {
-    color: #9e2a2b;
-}
-
-/* モバイル向け操作説明 */
-.game-mobile-instruction {
-    margin-top: 15px;
-    font-size: 12px;
-    color: #2c2520;
-    text-align: center;
-    line-height: 1.4;
-}
-
-/* ==========================================================================
-   レスポンシブ対応（スマホ表示）
-   ========================================================================== */
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .hero-section {
-        height: 70vh;
-    }
-
-    .catchphrase {
-        font-size: 1.8rem;
-        max-height: 50vh;
-    }
-
-    .about-container {
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .menu-category {
-        padding: 1.5rem;
-    }
-
-    .menu-list li {
-        font-size: 0.9rem;
-    }
-
-    /* アクセス */
-    .access-container {
-        flex-direction: column;
-        gap: 2rem;
-    }
-    
-    .map-wrapper {
-        padding-top: 75%; /* スマホでは4:3に変更 */
-    }
-
-    /* 浮遊ボタンをスマホ用に少し小さくする */
-    .game-float-btn {
-        bottom: 15px;
-        right: 15px;
-        padding: 10px 15px;
-        font-size: 12px;
-    }
-}
-/* ==========================================================================
    🎰 大将経歴スロット演出
    ========================================================================== */
 .slot-section {
@@ -614,7 +254,6 @@ li {
     animation: shake 0.5s;
 }
 
-/* 各カードの初期状態（非表示） */
 /* 各カードのレイアウト（横並びにする） */
 .slot-card {
     display: none;
@@ -658,7 +297,7 @@ li {
     justify-content: center;
 }
 
-/* テキストサイズの微調整（枠に収まるように少し小さめに） */
+/* テキストサイズの微調整 */
 .card-title {
     font-size: 1.15rem;
     font-weight: bold;
@@ -674,139 +313,42 @@ li {
     margin: 0;
 }
 
-/* スマホ用のレイアウト調整（写真を小さくして文字スペースを確保） */
-@media (max-width: 480px) {
-    .slot-card-left {
-        flex: 0 0 80px; /* スマホでは写真を80pxに縮小 */
-        height: 80px;
-    }
-    .card-title {
-        font-size: 1rem;
-    }
-    .card-text {
-        font-size: 0.75rem;
-    }
-}
-/* ==========================================================================
-   🏆 星取表セクション（日本相撲協会リンク）
-   ========================================================================== */
-.hoshitori-section {
-    background-color: #fcfaf2;
-    padding: 6rem 2rem;
-    text-align: center;
-}
-
-.hoshitori-intro {
-    font-size: 1.1rem;
-    margin-bottom: 2.5rem;
-    color: #555;
-}
-
-.hoshitori-container {
-    max-width: 650px;
-    margin: 0 auto;
-    background: #ffffff;
-    padding: 40px 30px;
-    border: 4px double #2c2520; /* 渋い二重枠 */
-    border-radius: 4px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-/* 番付・星取板をイメージした木札風枠組み */
-.hoshitori-board {
-    border: 2px solid #2c2520;
-    margin-bottom: 2.5rem;
-    background-color: #fffdec; /* 伝統的な和紙・板の色 */
-}
-
-.hoshitori-board-header, .hoshitori-row {
-    display: grid;
-    grid-template-columns: 1fr 2fr 5fr 1fr;
-    border-bottom: 1px solid #2c2520;
-    padding: 12px 10px;
-    align-items: center;
-    font-size: 0.95rem;
-}
-
-.hoshitori-board-header {
-    background-color: #2c2520;
-    color: #fcfaf2;
+/* ボタンのデザイン */
+.btn-slot {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
     font-weight: bold;
-    font-size: 0.9rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    border: 3px solid #2c2520;
 }
 
-.hoshitori-row:last-child {
-    border-bottom: none;
-}
-
-.hoshitori-row .side-sign {
-    font-weight: bold;
-}
-.hoshitori-row .side-sign.east { color: #9e2a2b; } /* 東は朱 */
-.hoshitori-row .side-sign.west { color: #443a33; } /* 西は墨 */
-
-.hoshitori-row .sumo-name {
-    font-weight: 700;
-    border-right: 1px solid #2c2520;
-    border-left: 1px solid #2c2520;
-    padding: 0 10px;
-    font-size: 1.1rem;
-}
-
-.hoshitori-row .stars-flow {
-    font-family: monospace;
-    letter-spacing: 4px;
-    font-size: 1rem;
+.btn-slot.start {
+    background-color: #f4a261;
     color: #2c2520;
-    padding-left: 10px;
-    text-align: left;
 }
 
-/* 協会リンクボタンエリア */
-.hoshitori-note {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-}
-
-.btn-hoshitori {
-    display: inline-block;
-    background-color: #2c2520;
-    color: #fcfaf2 !important;
-    padding: 1rem 2rem;
-    font-weight: bold;
-    border-radius: 4px;
-    border: 2px solid #2c2520;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.btn-hoshitori:hover {
+.btn-slot.start:hover {
     background-color: #fcfaf2;
-    color: #2c2520 !important;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
 }
 
-/* スマホ表示での星取表の最適化 */
-@media (max-width: 550px) {
-    .hoshitori-board-header, .hoshitori-row {
-        grid-template-columns: 2fr 4fr; /* 東・西のサインを隠してスッキリさせる */
-        font-size: 0.85rem;
-    }
-    .hoshitori-board-header span:first-child,
-    .hoshitori-board-header span:last-child,
-    .hoshitori-row .side-sign {
-        display: none;
-    }
-    .hoshitori-row .sumo-name {
-        border-left: none;
-        font-size: 1rem;
-    }
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); background-color: #d62828; }
+    100% { transform: scale(1); }
 }
+.btn-slot.stop {
+    background-color: #9e2a2b;
+    color: #fcfaf2;
+    animation: pulse 1s infinite;
+}
+
 /* ==========================================================================
-   🏆 星取表セクション（日本相撲協会リンク）
+   🏆 本場所星取表（日本相撲協会リンク・シンプル版）
    ========================================================================== */
 .hoshitori-section {
     background-color: #fcfaf2;
@@ -832,7 +374,6 @@ li {
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-/* 協会リンクボタンエリア */
 .hoshitori-note {
     font-size: 1rem;
     color: #555;
@@ -858,4 +399,318 @@ li {
     color: #2c2520 !important;
     box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   お品書き（メニューセクション）
+   ========================================================================== */
+.menu-section {
+    background-color: #f3edd8; /* 少し濃い和風のベージュ */
+    padding: 6rem 2rem;
+}
+
+.menu-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+}
+
+.menu-category {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border-left: 5px solid #9e2a2b;
+}
+
+.menu-category h3 {
+    font-size: 1.4rem;
+    color: #2c2520;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e8e2d5;
+    padding-bottom: 0.5rem;
+}
+
+.menu-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.8rem 0;
+    border-bottom: 1px dotted #ccc;
+}
+
+.menu-list .name {
+    font-weight: 700;
+}
+
+.menu-list .name small {
+    display: block;
+    font-size: 0.8rem;
+    color: #777;
+    font-weight: normal;
+    margin-top: 0.2rem;
+}
+
+.menu-list .price {
+    font-weight: 700;
+    color: #9e2a2b;
+    white-space: nowrap;
+}
+
+.menu-note {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 1rem;
+    text-align: right;
+}
+
+/* ==========================================================================
+   アクセスセクション（マップ埋め込み）
+   ========================================================================== */
+.access-section {
+    max-width: 1200px;
+    margin: 6rem auto;
+    padding: 0 2rem;
+}
+
+.access-container {
+    display: flex;
+    gap: 4rem;
+    align-items: center;
+}
+
+.map-wrapper {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9比率 */
+    border: 4px double #2c2520;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.map-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.access-info {
+    flex: 1;
+}
+
+.access-info h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #9e2a2b;
+    padding-bottom: 0.5rem;
+}
+
+.access-info p {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   フッター・店舗情報
+   ========================================================================== */
+.site-footer {
+    background-color: #2c2520;
+    color: #fcfaf2;
+    padding: 4rem 2rem 2rem;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.footer-logo {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+}
+
+.footer-info {
+    margin-bottom: 3rem;
+}
+
+.footer-info .tel {
+    font-size: 1.8rem;
+    color: #f4a261;
+    margin-bottom: 1rem;
+}
+
+.footer-info .tel strong {
+    font-family: sans-serif; /* 電話番号は読みやすいゴシック */
+}
+
+.footer-info .address, 
+.footer-info .open-hours {
+    font-size: 0.95rem;
+    color: #ccc;
+    margin-bottom: 0.5rem;
+}
+
+.copyright {
+    font-size: 0.8rem;
+    color: #888;
+    border-top: 1px solid #443a33;
+    padding-top: 2rem;
+}
+
+/* ==========================================================================
+   🕹️ ゲームポップアップ ＆ 浮遊ボタン
+   ========================================================================== */
+.game-float-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: #9e2a2b; /* 渋い朱色 */
+    color: #fcfaf2;
+    padding: 15px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 50px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.3s ease;
+    border: 2px solid #fcfaf2;
+    font-family: 'Courier New', Courier, monospace, sans-serif;
+}
+
+.game-float-btn:hover {
+    background-color: #fcfaf2;
+    color: #9e2a2b;
+    transform: scale(1.1);
+}
+
+.game-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(26, 21, 18, 0.85); /* 暗い焦げ茶透過 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+.game-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.game-modal-content {
+    background-color: #fcfaf2;
+    padding: 25px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 95%;
+}
+
+.game-modal-content canvas {
+    background-color: #1a1512;
+    border: 4px double #9e2a2b;
+    max-width: 100%;
+    height: auto;
+}
+
+.game-close-btn {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    font-size: 35px;
+    color: #fcfaf2;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.game-close-btn:hover {
+    color: #9e2a2b;
+}
+
+.game-mobile-instruction {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #2c2520;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   レスポンシブ対応（スマホ・タブレット表示）
+   ========================================================================== */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hero-section {
+        height: 70vh;
+    }
+
+    .catchphrase {
+        font-size: 1.8rem;
+        max-height: 50vh;
+    }
+
+    .about-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .menu-category {
+        padding: 1.5rem;
+    }
+
+    .menu-list li {
+        font-size: 0.9rem;
+    }
+
+    .access-container {
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .map-wrapper {
+        padding-top: 75%; /* スマホでは4:3に変更 */
+    }
+
+    .game-float-btn {
+        bottom: 15px;
+        right: 15px;
+        padding: 10px 15px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slot-card-left {
+        flex: 0 0 80px; /* スマホでは写真を80pxに縮小 */
+        height: 80px;
+    }
+    .card-title {
+        font-size: 1rem;
+    }
+    .card-text {
+        font-size: 0.75rem;
+    }
 }
