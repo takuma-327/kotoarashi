@@ -15,6 +15,7 @@
             <nav class="header-nav">
                 <ul>
                     <li><a href="#about">こだわり</a></li>
+                    <li><a href="#master-slot">大将おみくじ</a></li>
                     <li><a href="#menu">お品書き</a></li>
                     <li><a href="#access">アクセス</a></li>
                 </ul>
@@ -46,75 +47,88 @@
             </div>
         </div>
     </section>
+
+    <!-- ==========================================
+         🎰 大将の激アツ目押し経歴スロット（修復完了！）
+         ========================================== -->
     <section id="master-slot" class="slot-section">
         <h2 class="section-title">大将の経歴おみくじ</h2>
-        <p class="slot-intro">【激アツ演出】ボタンを押して大将の経歴を狙え！スクショして「大当たり」が出たらお店で見せてみてね！</p>
+        <p class="slot-intro">【激アツ演出】ボタンを押して大将の経歴を狙え！スクショして「大将スマイル」が出たらラッキー！</p>
         
         <div class="slot-container">
             <div class="slot-machine">
                 <div class="slot-screen" id="slot-screen">
                     
-                   <div class="slot-card active">
-    <div class="slot-card-left">
-        <img src="daisho_sumo.png" alt="元・琴嵐" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=1'">
-    </div>
-    <div class="slot-card-right">
-        <div class="card-badge gold">四股名</div>
-        <div class="card-title">元・琴嵐</div>
-        <p class="card-text">名門・佐渡ヶ嶽部屋の系譜を継ぐ元力士。お相撲さんしか知らない「本物の味」を天満にお届け！</p>
-    </div>
-</div>
+                    <!-- カード1: 四股名 -->
+                    <div class="slot-card active">
+                        <div class="slot-card-left">
+                            <img src="daisho_sumo.png" alt="元・琴嵐" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=1'">
+                        </div>
+                        <div class="slot-card-right">
+                            <div class="card-badge gold">四股名</div>
+                            <div class="card-title">元・琴嵐</div>
+                            <p class="card-text">名門·佐渡ヶ嶽部屋の系譜を継ぐ元力士。お相撲さんしか知らない「本物の味」を天満にお届け！</p>
+                        </div>
+                    </div>
 
-<div class="slot-card">
-    <div class="slot-card-left">
-        <img src="daisho_active.png" alt="現役時代" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=2'">
-    </div>
-    <div class="slot-card-right">
-        <div class="card-badge gold">最高位</div>
-        <div class="card-title">西十両三枚目</div>
-        <p class="card-text">関取まで上り詰めた実力派。現役時代の激闘のスピリットが、この天満の暖簾に受け継がれている！</p>
-    </div>
-</div>
+                    <!-- カード2: 戦績のロマン -->
+                    <div class="slot-card">
+                        <div class="slot-card-left">
+                            <img src="daisho_active.png" alt="現役時代" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=2'">
+                        </div>
+                        <div class="slot-card-right">
+                            <div class="card-badge gold">最高位</div>
+                            <div class="card-title">西十両三枚目</div>
+                            <p class="card-text">関取まで上り詰めた実力派。現役時代の激闘のスピリットが、この天満の暖簾に受け継がれている！</p>
+                        </div>
+                    </div>
 
-<div class="slot-card">
-    <div class="slot-card-left">
-        <img src="daisho_kodawari.png" alt="こだわりスープ" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=3'">
-    </div>
-    <div class="slot-card-right">
-        <div class="card-badge red">こだわり</div>
-        <div class="card-title">秘伝のスープを炊き出す男</div>
-        <p class="card-text">鶏ガラをふんだんに使い、じっくりと炊き出したコクのある至高スープ。一口飲めば体に染み渡る本物の味。</p>
-    </div>
-</div>
+                    <!-- カード3: こだわり -->
+                    <div class="slot-card">
+                        <div class="slot-card-left">
+                            <img src="daisho_kodawari.png" alt="こだわりスープ" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=3'">
+                        </div>
+                        <div class="slot-card-right">
+                            <div class="card-badge red">こだわり</div>
+                            <div class="card-title">秘伝のスープを炊き出す男</div>
+                            <p class="card-text">鶏ガラをふんだんに使い、じっくりと炊き出したコクのある至高スープ。一口飲めば体に染み渡る本物の味。</p>
+                        </div>
+                    </div>
 
-<div class="slot-card special-card">
-    <div class="slot-card-left">
-        <img src="daisho_smile.png" alt="大将スマイル" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=4'">
-    </div>
-    <div class="slot-card-right">
-        <div class="card-badge rainbow">⚡超激レア⚡</div>
-        <div class="card-title">大将のスマイル</div>
-        <p class="card-text">【超大吉！】普段は寡黙な大将の極上スマイルが炸裂！これを見られた今日は最高の夜になるはず。</p>
-    </div>
-</div>
+                    <!-- カード4: 超激レア -->
+                    <div class="slot-card special-card">
+                        <div class="slot-card-left">
+                            <img src="daisho_smile.png" alt="大将スマイル" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=4'">
+                        </div>
+                        <div class="slot-card-right">
+                            <div class="card-badge rainbow">⚡超激レア⚡</div>
+                            <div class="card-title">大将のスマイル</div>
+                            <p class="card-text">【超大吉！】普段は寡黙な大将の極上スマイルが炸裂！これを見られた今日は最高の夜になるはず。</p>
+                        </div>
+                    </div>
 
-<div class="slot-card rare-card">
-    <div class="slot-card-left">
-        <img src="daisho_manin.png" alt="満員御礼" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=5'">
-    </div>
-    <div class="slot-card-right">
-        <div class="card-badge green">大入り</div>
-        <div class="card-title">満員御礼！</div>
-        <p class="card-text">琴嵐の夜はいつも大賑わい！美味しいお酒と旨いちゃんこを囲んで、みんなで元気に「ごっつあんです！」</p>
-    </div>
-</div>
+                    <!-- カード5: お茶目レア -->
+                    <div class="slot-card rare-card">
+                        <div class="slot-card-left">
+                            <img src="daisho_manin.png" alt="満員御礼" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=5'">
+                        </div>
+                        <div class="slot-card-right">
+                            <div class="card-badge green">大入り</div>
+                            <div class="card-title">満員御礼！</div>
+                            <p class="card-text">琴嵐の夜はいつも大賑わい！美味しいお酒と旨いちゃんこを囲んで、みんなで元気に「ごっつあんです！」</p>
+                        </div>
+                    </div>
 
+                </div> <!-- #slot-screen の閉じタグ（復活） -->
+            </div> <!-- .slot-machine の閉じタグ -->
+            
             <div class="slot-controls">
                 <button id="btn-slot-control" class="btn-slot start">スタート！</button>
             </div>
-        </div>
+        </div> <!-- .slot-container の閉じタグ（復活） -->
     </section>
 
+    <!-- 🎰 スロット制御JavaScript -->
     <script>
         const cards = document.querySelectorAll('.slot-card');
         const slotBtn = document.getElementById('btn-slot-control');
@@ -156,14 +170,12 @@
 
         slotBtn.addEventListener('click', () => {
             if (!isSpinning) {
-                // スロット回転開始（100ミリ秒〜130ミリ秒くらいが目押ししやすくておすすめ！）
                 isSpinning = true;
                 slotBtn.textContent = 'ストップ！！！';
                 slotBtn.className = 'btn-slot stop';
                 
                 slotInterval = setInterval(spin, 120); 
             } else {
-                // スロット停止（目押し！）
                 isSpinning = false;
                 clearInterval(slotInterval);
                 screen.classList.remove('flash');
@@ -171,7 +183,6 @@
                 slotBtn.textContent = 'もう一回まわす';
                 slotBtn.className = 'btn-slot start';
                 
-                // 止まったカードが激レアだったら、画面を少し揺らす演出
                 if (cards[currentIndex].classList.contains('special-card')) {
                     screen.classList.add('shake');
                     setTimeout(() => screen.classList.remove('shake'), 500);
@@ -179,7 +190,7 @@
             }
         });
 
-        // 最初にページを開いたときに正しく初期化する
+        // 初期化
         initSlot();
     </script>
 
@@ -266,6 +277,7 @@
         </div>
     </footer>
 
+    <!-- 🕹️ ゲームポップアップ構造 -->
     <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ">
         🎮 琴嵐 ゲイム
     </div>
@@ -281,32 +293,27 @@
         </div>
     </div>
 
+    <!-- 🕹️ ゲームスクリプト読み込み -->
     <script src="game.js"></script>
     <script>
-        // ポップアップの開閉制御
         const trigger = document.getElementById('game-trigger');
         const modal = document.getElementById('game-modal');
         const closeBtn = document.getElementById('game-close-btn');
 
-        // 開く
         trigger.addEventListener('click', () => {
             modal.classList.add('active');
-            // game.js に書いた初期化関数を呼び出してゲーム起動！
             if (typeof initGame === 'function') {
                 initGame();
             }
         });
 
-        // 閉じる
         closeBtn.addEventListener('click', () => {
             modal.classList.remove('active');
-            // ゲームループとキーイベントを安全に停止
             if (typeof window.stopGame === 'function') {
                 window.stopGame();
             }
         });
 
-        // 背景クリックでも閉じる
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.remove('active');
