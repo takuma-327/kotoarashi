@@ -3,21 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地鶏家 琴嵐 天満店 | 佐渡ヶ嶽部屋直伝ちゃんこ鍋・炭火やきとり</title>
+    <title>地鶏家 琴嵐 天満店 | Jidoriya Kotoarashi</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Sawarabi+Mincho&display=swap" rel="stylesheet">
 </head>
 <body>
 
+    <!-- 🌐 言語選択モーダル (初回アクセス時) -->
+    <div id="lang-overlay" class="lang-overlay">
+        <div class="lang-modal">
+            <h2>SELECT LANGUAGE / 言語選択</h2>
+            <p>Please select your preferred language.<br>ご希望の言語を選択してください。</p>
+            <div class="lang-buttons">
+                <button type="button" class="lang-btn" onclick="selectLanguage('ja')">
+                    <span>日本語</span> <span class="flag">🇯🇵</span>
+                </button>
+                <button type="button" class="lang-btn" onclick="selectLanguage('en')">
+                    <span>English</span> <span class="flag">🇺🇸</span>
+                </button>
+                <button type="button" class="lang-btn" onclick="selectLanguage('zh')">
+                    <span>中文 (简体)</span> <span class="flag">🇨🇳</span>
+                </button>
+                <button type="button" class="lang-btn" onclick="selectLanguage('ko')">
+                    <span>한국어</span> <span class="flag">🇰🇷</span>
+                </button>
+                <button type="button" class="lang-btn" onclick="selectLanguage('ne')">
+                    <span>नेपाली</span> <span class="flag">🇳🇵</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌐 画面左下の言語切替固定セレクト -->
+    <div class="lang-switcher-fixed">
+        <span style="color:#d4af37; font-size:14px;">🌐</span>
+        <select id="lang-select" onchange="selectLanguage(this.value)">
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+            <option value="zh">中文 (简体)</option>
+            <option value="ko">한국어</option>
+            <option value="ne">नेपाली</option>
+        </select>
+    </div>
+
     <header class="site-header">
         <div class="header-container">
-            <h1 class="site-logo">地鶏家 琴嵐 <span class="branch">天満店</span></h1>
+            <h1 class="site-logo">地鶏家 琴嵐 <span class="branch" data-i18n="branch">天満店</span></h1>
             <nav class="header-nav">
                 <ul>
-                    <li><a href="#about">こだわり</a></li>
-                    <li><a href="#master-slot">大将おみくじ</a></li>
-                    <li><a href="#menu">お品書き</a></li>
-                    <li><a href="#access">アクセス</a></li>
+                    <li><a href="#about" data-i18n="nav_about">こだわり</a></li>
+                    <li><a href="#master-slot" data-i18n="nav_slot">大将おみくじ</a></li>
+                    <li><a href="#menu" data-i18n="nav_menu">お品書き</a></li>
+                    <li><a href="#access" data-i18n="nav_access">アクセス</a></li>
                 </ul>
             </nav>
         </div>
@@ -28,241 +65,173 @@
             <img src="photo2.png" alt="地鶏家 琴嵐 店舗外観" class="hero-image">
         </div>
         <div class="hero-text">
-            <p class="catchphrase">暖簾の先に、<br>佐渡ヶ嶽部屋直伝の味が待っている。</p>
+            <p class="catchphrase" data-i18n="catchphrase">暖簾の先に、<br>佐渡ヶ嶽部屋直伝の味が待っている。</p>
         </div>
     </section>
 
     <section id="about" class="about-section">
-        <h2 class="section-title">琴嵐のこだわり</h2>
+        <h2 class="section-title" data-i18n="about_title">琴嵐のこだわり</h2>
         <div class="about-container">
             <div class="about-card">
                 <img src="photo1.png" alt="佐渡ヶ嶽部屋直伝のスープ" class="about-img">
-                <h3>直伝の至高スープ</h3>
-                <p>鶏ガラをふんだんに使い、じっくりと炊き出したコクのあるスープ。一口飲めば体に染み渡る、本物のちゃんこ・もつ鍋をどうぞ。</p>
+                <h3 data-i18n="about_card1_title">直伝の至高スープ</h3>
+                <p data-i18n="about_card1_text">鶏ガラをふんだんに使い、じっくりと炊き出したコクのあるスープ。一口飲めば体に染み渡る、本物のちゃんこ・もつ鍋をどうぞ。</p>
             </div>
             <div class="about-card">
                 <img src="photo3.png" alt="スタミナチャージ" class="about-img">
-                <h3>元力士の店主が炊き出す</h3>
-                <p>同期には錚々たるメンバー。お相撲さんしか知らない「本物の味」と「世界の話」を、美味しいお酒と共にお楽しみいただけます。</p>
+                <h3 data-i18n="about_card2_title">元力士の店主が炊き出す</h3>
+                <p data-i18n="about_card2_text">同期には錚々たるメンバー。お相撲さんしか知らない「本物の味」と「世界の話」を、美味しいお酒と共にお楽しみいただけます。</p>
             </div>
         </div>
     </section>
 
-    <!-- ==========================================
-         🎰 大将の激アツ目押し経歴スロット（修復完了！）
-         ========================================== -->
+    <!-- 🎰 大将経歴スロット -->
     <section id="master-slot" class="slot-section">
-        <h2 class="section-title">大将の経歴おみくじ</h2>
-        <p class="slot-intro">【激アツ演出】ボタンを押して大将の経歴を狙え！スクショして「大将スマイル」が出たらラッキー！</p>
+        <h2 class="section-title" data-i18n="slot_title">大将の経歴おみくじ</h2>
+        <p class="slot-intro" data-i18n="slot_intro">【激アツ演出】ボタンを押して大将の経歴を狙え！スクショして「大将スマイル」が出たらラッキー！</p>
         
         <div class="slot-container">
             <div class="slot-machine">
                 <div class="slot-screen" id="slot-screen">
                     
-                    <!-- カード1: 四股名 -->
+                    <!-- カード1 -->
                     <div class="slot-card active">
                         <div class="slot-card-left">
                             <img src="daisho_sumo.png" alt="元・琴嵐" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=1'">
                         </div>
                         <div class="slot-card-right">
-                            <div class="card-badge gold">四股名</div>
-                            <div class="card-title">元・琴嵐</div>
-                            <p class="card-text">名門·佐渡ヶ嶽部屋の系譜を継ぐ元力士。お相撲さんしか知らない「本物の味」を天満にお届け！</p>
+                            <div class="card-badge gold" data-i18n="card1_badge">四股名</div>
+                            <div class="card-title" data-i18n="card1_title">元・琴嵐</div>
+                            <p class="card-text" data-i18n="card1_text">名門·佐渡ヶ嶽部屋の系譜を継ぐ元力士。お相撲さんしか知らない「本物の味」を天満にお届け！</p>
                         </div>
                     </div>
 
-                    <!-- カード2: 戦績のロマン -->
+                    <!-- カード2 -->
                     <div class="slot-card">
                         <div class="slot-card-left">
                             <img src="daisho_active.png" alt="現役時代" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=2'">
                         </div>
                         <div class="slot-card-right">
-                            <div class="card-badge gold">最高位</div>
-                            <div class="card-title">西十両三枚目</div>
-                            <p class="card-text">関取まで上り詰めた実力派。現役時代の激闘のスピリットが、この天満の暖簾に受け継がれている！</p>
+                            <div class="card-badge gold" data-i18n="card2_badge">最高位</div>
+                            <div class="card-title" data-i18n="card2_title">西十両三枚目</div>
+                            <p class="card-text" data-i18n="card2_text">関取まで上り詰めた実力派。現役時代の激闘のスピリットが、この天満の暖簾に受け継がれている！</p>
                         </div>
                     </div>
 
-                    <!-- カード3: こだわり -->
+                    <!-- カード3 -->
                     <div class="slot-card">
                         <div class="slot-card-left">
                             <img src="daisho_kodawari.png" alt="こだわりスープ" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=3'">
                         </div>
                         <div class="slot-card-right">
-                            <div class="card-badge red">こだわり</div>
-                            <div class="card-title">秘伝のスープを炊き出す男</div>
-                            <p class="card-text">鶏ガラをふんだんに使い、じっくりと炊き出したコクのある至高スープ。一口飲めば体に染み渡る本物の味。</p>
+                            <div class="card-badge red" data-i18n="card3_badge">こだわり</div>
+                            <div class="card-title" data-i18n="card3_title">秘伝のスープを炊き出す男</div>
+                            <p class="card-text" data-i18n="card3_text">鶏ガラをふんだんに使い、じっくりと炊き出したコクのある至高スープ。一口飲めば体に染み渡る本物の味。</p>
                         </div>
                     </div>
 
-                    <!-- カード4: 超激レア -->
+                    <!-- カード4 (激レア) -->
                     <div class="slot-card special-card">
                         <div class="slot-card-left">
                             <img src="daisho_smile.png" alt="大将スマイル" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=4'">
                         </div>
                         <div class="slot-card-right">
-                            <div class="card-badge rainbow">⚡超激レア⚡</div>
-                            <div class="card-title">大将のスマイル</div>
-                            <p class="card-text">【超大吉！】普段は寡黙な大将の極上スマイルが炸裂！これを見られた今日は最高の夜になるはず。</p>
+                            <div class="card-badge rainbow" data-i18n="card4_badge">⚡超激レア⚡</div>
+                            <div class="card-title" data-i18n="card4_title">大将のスマイル</div>
+                            <p class="card-text" data-i18n="card4_text">【超大吉！】普段は寡黙な大将の極上スマイルが炸裂！これを見られた今日は最高の夜になるはず。</p>
                         </div>
                     </div>
 
-                    <!-- カード5: お茶目レア -->
-                    <div class="slot-card rare-card">
+                    <!-- カード5 -->
+                    <div class="slot-card">
                         <div class="slot-card-left">
                             <img src="daisho_manin.png" alt="満員御礼" class="slot-card-img" onerror="this.src='https://picsum.photos/150/150?random=5'">
                         </div>
                         <div class="slot-card-right">
-                            <div class="card-badge green">大入り</div>
-                            <div class="card-title">満員御礼！</div>
-                            <p class="card-text">琴嵐の夜はいつも大賑わい！美味しいお酒と旨いちゃんこを囲んで、みんなで元気に「ごっつあんです！」</p>
+                            <div class="card-badge green" data-i18n="card5_badge">大入り</div>
+                            <div class="card-title" data-i18n="card5_title">満員御礼！</div>
+                            <p class="card-text" data-i18n="card5_text">琴嵐の夜はいつも大賑わい！美味しいお酒と旨いちゃんこを囲んで、みんなで元気に「ごっつあんです！」</p>
                         </div>
                     </div>
 
-                </div> <!-- #slot-screen の閉じタグ（復活） -->
-            </div> <!-- .slot-machine の閉じタグ -->
+                </div>
+            </div>
             
             <div class="slot-controls">
-                <button id="btn-slot-control" class="btn-slot start">スタート！</button>
+                <button type="button" id="btn-slot-control" class="btn-slot start" data-i18n="btn_start">スタート！</button>
             </div>
-        </div> <!-- .slot-container の閉じタグ（復活） -->
+        </div>
     </section>
 
-    <!-- 🎰 スロット制御JavaScript -->
-    <script>
-        const cards = document.querySelectorAll('.slot-card');
-        const slotBtn = document.getElementById('btn-slot-control');
-        const screen = document.getElementById('slot-screen');
-        
-        let slotInterval = null;
-        let currentIndex = 0;
-        let isSpinning = false;
-
-        // 完全に1枚だけを表示する初期化処理
-        function initSlot() {
-            cards.forEach((card, index) => {
-                if (index === currentIndex) {
-                    card.style.display = 'flex';
-                    card.classList.add('active');
-                } else {
-                    card.style.display = 'none';
-                    card.classList.remove('active');
-                }
-            });
-        }
-
-        // 高速シャッフル関数
-        function spin() {
-            // 現在のカードを非表示にして完全に隠す
-            cards[currentIndex].style.display = 'none';
-            cards[currentIndex].classList.remove('active');
-            
-            // 次のカードへ
-            currentIndex = (currentIndex + 1) % cards.length;
-            
-            // 次のカードを完全に表示する
-            cards[currentIndex].style.display = 'flex';
-            cards[currentIndex].classList.add('active');
-            
-            // 画面をフラッシュさせる演出クラスをトグル
-            screen.classList.toggle('flash');
-        }
-
-        slotBtn.addEventListener('click', () => {
-            if (!isSpinning) {
-                isSpinning = true;
-                slotBtn.textContent = 'ストップ！！！';
-                slotBtn.className = 'btn-slot stop';
-                
-                slotInterval = setInterval(spin, 120); 
-            } else {
-                isSpinning = false;
-                clearInterval(slotInterval);
-                screen.classList.remove('flash');
-                
-                slotBtn.textContent = 'もう一回まわす';
-                slotBtn.className = 'btn-slot start';
-                
-                if (cards[currentIndex].classList.contains('special-card')) {
-                    screen.classList.add('shake');
-                    setTimeout(() => screen.classList.remove('shake'), 500);
-                }
-            }
-        });
-
-        // 初期化
-        initSlot();
-    </script>
-<!-- ==========================================
-         🏆 本場所星取表（日本相撲協会公式リンク）
-         ========================================== -->
+    <!-- 🏆 本場所星取表 -->
     <section id="hoshitori" class="hoshitori-section">
-        <h2 class="section-title">本場所星取表</h2>
+        <h2 class="section-title" data-i18n="hoshitori_title">本場所星取表</h2>
         <div class="hoshitori-container">
-            <p class="hoshitori-intro">千秋楽はみんなで見よう！！</p>
-            
-            <!-- 協会への渋い導線リンク -->
+            <p class="hoshitori-intro" data-i18n="hoshitori_intro">千秋楽はみんなで見よう！！</p>
             <div class="hoshitori-link-box">
-                <p class="hoshitori-note">
+                <p class="hoshitori-note" data-i18n="hoshitori_note">
                     現在開催中の本場所リアルタイム星取・最新の取組結果は、<br>
                     日本相撲協会公式サイトにてご確認いただけます。
                 </p>
-                <a href="https://www.sumo.or.jp/" target="_blank" rel="noopener noreferrer" class="btn-hoshitori">
+                <a href="https://www.sumo.or.jp/" target="_blank" rel="noopener noreferrer" class="btn-hoshitori" data-i18n="btn_hoshitori">
                     🏆 日本相撲協会 公式サイトで星取を見る
                 </a>
             </div>
         </div>
     </section>
+
+    <!-- 🍲 お品書き -->
     <section id="menu" class="menu-section">
-        <h2 class="section-title">お品書き</h2>
+        <h2 class="section-title" data-i18n="menu_title">お品書き</h2>
         
         <div class="menu-container">
             <div class="menu-category">
-                <h3>◆ 佐渡ヶ嶽部屋直伝・お鍋</h3>
+                <h3 data-i18n="menu_cat1">◆ 佐渡ヶ嶽部屋直伝・お鍋</h3>
                 <ul class="menu-list">
-                    <li><span class="name">ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">ソップ炊きちゃんこ鍋（1人前・しょうゆ味）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">塩ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">ピリ辛ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
-                    <li><span class="name">もつ鍋（1人前）<small>（塩・ピリ辛・しょうゆ）</small></span><span class="price">2,500円</span></li>
-                    <li><span class="name">魚介入りスペシャルちゃんこ鍋（1人前）</span><span class="price">2,990円</span></li>
+                    <li><span class="name" data-i18n="m_chanko">ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
+                    <li><span class="name" data-i18n="m_sop">ソップ炊きちゃんこ鍋（1人前・しょうゆ味）</span><span class="price">2,500円</span></li>
+                    <li><span class="name" data-i18n="m_shio">塩ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
+                    <li><span class="name" data-i18n="m_spicy">ピリ辛ちゃんこ鍋（1人前）</span><span class="price">2,500円</span></li>
+                    <li><span class="name" data-i18n="m_motsu">もつ鍋（1人前）<small>（塩・ピリ辛・しょうゆ）</small></span><span class="price">2,500円</span></li>
+                    <li><span class="name" data-i18n="m_seafood">魚介入りスペシャルちゃんこ鍋（1人前）</span><span class="price">2,990円</span></li>
                 </ul>
-                <p class="menu-note">※〆の雑炊・ラーメン（各530円）、リゾット（590円※塩のみ）もございます。</p>
+                <p class="menu-note" data-i18n="menu_note">※〆の雑炊・ラーメン（各530円）、リゾット（590円※塩のみ）もございます。</p>
             </div>
 
             <div class="menu-category">
-                <h3>◆ 炭火串焼き（一皿二串）</h3>
+                <h3 data-i18n="menu_cat2">◆ 炭火串焼き（一皿二串）</h3>
                 <ul class="menu-list">
-                    <li><span class="name">380円均一串<small>（せせり・ねぎま・きも・かわ・ずり・三角など）</small></span><span class="price">各380円</span></li>
-                    <li><span class="name">鳥むね<small>（しお・チーズ・梅じそ）</small></span><span class="price">各400円</span></li>
-                    <li><span class="name">つくね（2串）</span><span class="price">460円</span></li>
-                    <li><span class="name">手羽先</span><span class="price">500円</span></li>
-                    <li><span class="name">豚バラ</span><span class="price">450円</span></li>
-                    <li><span class="name">串焼き盛合わせ（8本）</span><span class="price">1,520円</span></li>
+                    <li><span class="name" data-i18n="m_skewers_all">380円均一串<small>（せせり・ねぎま・きも・かわ・ずり・三角など）</small></span><span class="price">各380円</span></li>
+                    <li><span class="name" data-i18n="m_breast">鳥むね<small>（しお・チーズ・梅じそ）</small></span><span class="price">各400円</span></li>
+                    <li><span class="name" data-i18n="m_tsukune">つくね（2串）</span><span class="price">460円</span></li>
+                    <li><span class="name" data-i18n="m_wing">手羽先</span><span class="price">500円</span></li>
+                    <li><span class="name" data-i18n="m_pork">豚バラ</span><span class="price">450円</span></li>
+                    <li><span class="name" data-i18n="m_assort">串焼き盛合わせ（8本）</span><span class="price">1,520円</span></li>
                 </ul>
             </div>
 
             <div class="menu-category">
-                <h3>◆ お造り・一品</h3>
+                <h3 data-i18n="menu_cat3">◆ お造り・一品</h3>
                 <ul class="menu-list">
-                    <li><span class="name">鳥むねのたたき</span><span class="price">580円</span></li>
-                    <li><span class="name">鳥のお造り盛合わせ</span><span class="price">1,000円</span></li>
-                    <li><span class="name">名物 琴嵐の手羽先揚げ</span><span class="price">690円</span></li>
-                    <li><span class="name">串カツ5本盛り</span><span class="price">750円</span></li>
-                    <li><span class="name">きもスペシャル / ずりスペシャル<small>（半生炙り）</small></span><span class="price">各600円</span></li>
-                    <li><span class="name">鳥ごぼう釜めし</span><span class="price">890円</span></li>
+                    <li><span class="name" data-i18n="m_tataki">鳥むねのたたき</span><span class="price">580円</span></li>
+                    <li><span class="name" data-i18n="m_sashimi">鳥のお造り盛合わせ</span><span class="price">1,000円</span></li>
+                    <li><span class="name" data-i18n="m_fried_wing">名物 琴嵐の手羽先揚げ</span><span class="price">690円</span></li>
+                    <li><span class="name" data-i18n="m_kushikatsu">串カツ5本盛り</span><span class="price">750円</span></li>
+                    <li><span class="name" data-i18n="m_special_liver">きもスペシャル / ずりスペシャル<small>（半生炙り）</small></span><span class="price">各600円</span></li>
+                    <li><span class="name" data-i18n="m_kamameshi">鳥ごぼう釜めし</span><span class="price">890円</span></li>
                 </ul>
             </div>
         </div>
     </section>
 
+    <!-- 📍 アクセス・店舗情報 -->
     <section id="access" class="access-section">
-        <h2 class="section-title">アクセス・店舗情報</h2>
+        <h2 class="section-title" data-i18n="access_title">アクセス・店舗情報</h2>
         <div class="access-container">
             <div class="map-wrapper">
                 <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3279.9142145326715!2d135.51347047634676!3d34.707328083040375!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6000e6c0adc18c7d%3A0x35da33f93a8fbc65!2z5Zyw6bOf5a62IOe0pOWymSDlpKnmuI_luZc!5e0!3m2!1sja!2sjp!4v1713500000000!5m2!1sja!2sjp" 
-                    width="600" 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d52483.43867440552!2d135.48486878449617!3d34.69975883398529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6000e6c0ad498c7d%3A0x35da33fa368fbca5!2z55C05bWQ!5e0!3m2!1sja!2sjp!4v1784288609951!5m2!1sja!2sjp" 
+                    width="100%" 
                     height="450" 
                     style="border:0;" 
                     allowfullscreen="" 
@@ -272,13 +241,14 @@
             </div>
             
             <div class="access-info">
-                <h3>地鶏家 琴嵐 <span class="branch">天満店</span></h3>
-                <p class="address">📍 〒530-0041 大阪府大阪市北区天神橋４丁目１０−５ 上野ビル</p>
-                <p class="station">🚉 天神橋筋六丁目駅・天満駅から徒歩すぐ</p>
+                <h3>地鶏家 琴嵐 <span class="branch" data-i18n="branch">天満店</span></h3>
+                <p class="address" data-i18n="address">📍 〒530-0041 大阪府大阪市北区天神橋４丁目１０−５ 上野ビル</p>
+                <p class="station" data-i18n="station">🚉 天満駅から徒歩すぐ</p>
                 <p class="tel">📞 06-6882-0612</p>
                 
-                <a href="https://tabelog.com/osaka/A2701/A270103/27080627/?cid=google_yoyaku" target="_blank" rel="noopener noreferrer" class="btn-reservation">
-                    <span>予約・空席状況（食べログへ）</span>
+                <a href="https://tabelog.com/osaka/A2701/A270103/27080627/?cid=google_yoyaku" target="_blank" rel="noopener noreferrer" class="btn-tabelog-reservation">
+                    <span class="btn-icon">🍽️</span>
+                    <span data-i18n="btn_reservation">予約・空席状況（食べログへ）</span>
                 </a>
             </div>
         </div>
@@ -286,18 +256,18 @@
 
     <footer id="info" class="site-footer">
         <div class="footer-container">
-            <h2 class="footer-logo">地鶏家 琴嵐 天満店</h2>
+            <h2 class="footer-logo" data-i18n="footer_title">地鶏家 琴嵐 天満店</h2>
             <div class="footer-info">
                 <p class="tel">TEL：<strong>06-6882-0612</strong></p>
-                <p class="address">大阪府大阪市北区天満エリア（天神橋筋六丁目・天満駅近く）</p>
-                <p class="open-hours">※営業時間・定休日はお電話にてお問い合わせください。</p>
+                <p class="address" data-i18n="footer_address">大阪府大阪市北区天満エリア（天神橋筋六丁目・天満駅近く）</p>
+                <p class="open-hours" data-i18n="footer_hours">※営業時間・定休日はお電話にてお問い合わせください。</p>
             </div>
             <p class="copyright">&copy; 地鶏家 琴嵐 天満店 All Rights Reserved.</p>
         </div>
     </footer>
 
-    <!-- 🕹️ ゲームポップアップ構造 -->
-    <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ">
+    <!-- 🕹️ ゲームポップアップ -->
+    <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ" data-i18n="game_btn">
         🎮 琴嵐 ゲイム
     </div>
 
@@ -305,43 +275,15 @@
         <div class="game-modal-content">
             <span id="game-close-btn" class="game-close-btn">&times;</span>
             <canvas id="gameCanvas" width="360" height="500"></canvas>
-            <div class="game-mobile-instruction">
+            <div class="game-mobile-instruction" data-i18n="game_instruction">
                 PC: ← →キー（移動） / Space（連射）<br>
                 スマホ: 画面スライド（移動＆自動連射）
             </div>
         </div>
     </div>
 
-    <!-- 🕹️ ゲームスクリプト読み込み -->
+    <!-- 外部スクリプトの読み込み -->
     <script src="game.js"></script>
-    <script>
-        const trigger = document.getElementById('game-trigger');
-        const modal = document.getElementById('game-modal');
-        const closeBtn = document.getElementById('game-close-btn');
-
-        trigger.addEventListener('click', () => {
-            modal.classList.add('active');
-            if (typeof initGame === 'function') {
-                initGame();
-            }
-        });
-
-        closeBtn.addEventListener('click', () => {
-            modal.classList.remove('active');
-            if (typeof window.stopGame === 'function') {
-                window.stopGame();
-            }
-        });
-
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-                if (typeof window.stopGame === 'function') {
-                    window.stopGame();
-                }
-            }
-        });
-    </script>
-
+    <script src="slot.js"></script>
 </body>
 </html>
