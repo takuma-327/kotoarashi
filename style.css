@@ -905,3 +905,38 @@ li {
         font-size: 0.75rem;
     }
 }
+/* ==========================================================================
+   🎮 ゲームモーダル内 タブ切り替えボタン
+   ========================================================================== */
+.game-tab-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    width: 100%;
+    max-width: 360px;
+    justify-content: center;
+}
+
+.game-tab-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fcfaf2;
+    background: #2c2520;
+    border: 2px solid #d4af37;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.game-tab-btn.active {
+    background: #9e2a2b;
+    border-color: #f4a261;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(244, 162, 97, 0.5);
+}
+
+.game-tab-btn:hover:not(.active) {
+    background: #443a33;
+}
