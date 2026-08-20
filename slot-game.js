@@ -1,6 +1,7 @@
 /**
  * 🎰 パチスロ 琴嵐（専用スクリプト）
- * ・上から下へのリール回転
+ * ・上から下へのスムーズなリール回転
+ * ・描画と当たり判定の完全一致修正版
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -50,12 +51,12 @@
 
     // 🎰 図柄＆配当設定
     const SYMBOLS = {
-        SEVEN:   { id: 0, name: '7',     color: '#ff2a2a', isSpecial: true, pay: 100 }, // 大当たり 100枚
-        CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 48 },  // 48枚
-        BEER:    { id: 2, name: '生ビール', icon: '🍺', pay: 24 },  // 24枚
-        CHICKEN: { id: 3, name: '地鶏',   icon: '🍗', pay: 18 },  // 18枚
-        BELL:    { id: 4, name: 'ベル',   icon: '🔔', pay: 6 },   // 6枚
-        REPLAY:  { id: 5, name: 'リプレイ', icon: '🔄', pay: 0 }    // 再遊技
+        SEVEN:   { id: 0, name: '7',     color: '#ff2a2a', pay: 100 }, // 大当たり 100枚
+        CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 48 },   // 48枚
+        BEER:    { id: 2, name: '生ビール', icon: '🍺', pay: 24 },   // 24枚
+        CHICKEN: { id: 3, name: '地鶏',   icon: '🍗', pay: 18 },   // 18枚
+        BELL:    { id: 4, name: 'ベル',   icon: '🔔', pay: 6 },    // 6枚
+        REPLAY:  { id: 5, name: 'リプレイ', icon: '🔄', pay: 0 }     // 再遊技
     };
 
     const REEL_STRIP = [
@@ -105,11 +106,11 @@
         state.status = 'SPINNING';
         playTone(300, 'sawtooth', 0.12, 0.3);
 
-        // 内部抽選 (5%で7大当たり告知)
+        // 内部抽選 (5%で7当たり告知)
         const rand = Math.random() * 100;
         if (rand < 5) {
             state.flashLamp = true;
-            playTone(120, 'sawtooth', 0.15, 0.5); // ガコッ！告知音
+            playTone(120, 'sawtooth', 0.15, 0.5); // ガコッ！音
             state.message = '⚡ 嵐ランプ点灯！7を狙え！ ⚡';
         }
 
@@ -130,7 +131,7 @@
         r.stopped = true;
         state.btnStops[index].active = false;
         
-        // 滑り補正
+        // 整数値にぴったり止める
         r.pos = Math.round(r.pos) % REEL_STRIP.length;
 
         if (state.reels.every(reel => reel.stopped)) {
@@ -138,6 +139,7 @@
         }
     }
 
+    // ✅ 描画と完全に一致させた当たり判定
     function checkResult() {
         state.status = 'PAYING';
         state.winLines = [];
@@ -145,6 +147,7 @@
         let isRep = false;
         let isBig = false;
 
+        // 各リールの 上段(t)、中段(c)、下段(b) の図柄を取得
         const grid = state.reels.map(r => {
             const c = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
             const t = (c - 1 + REEL_STRIP.length) % REEL_STRIP.length;
@@ -154,15 +157,16 @@
 
         // 5ライン判定（上段・中段・下段・右下がり・右上がり）
         const lines = [
-            { slots: [grid[0][0], grid[1][0], grid[2][0]], y: 130 },
-            { slots: [grid[0][1], grid[1][1], grid[2][1]], y: 190 },
-            { slots: [grid[0][2], grid[1][2], grid[2][2]], y: 250 },
-            { slots: [grid[0][0], grid[1][1], grid[2][2]], diag: 'down' },
-            { slots: [grid[0][2], grid[1][1], grid[2][0]], diag: 'up' }
+            { slots: [grid[0][0], grid[1][0], grid[2][0]], y: 130 }, // 上段
+            { slots: [grid[0][1], grid[1][1], grid[2][1]], y: 190 }, // 中段
+            { slots: [grid[0][2], grid[1][2], grid[2][2]], y: 250 }, // 下段
+            { slots: [grid[0][0], grid[1][1], grid[2][2]], diag: 'down' }, // 斜め右下がり
+            { slots: [grid[0][2], grid[1][1], grid[2][0]], diag: 'up' }   // 斜め右上がり
         ];
 
         lines.forEach(l => {
             const [s1, s2, s3] = l.slots;
+            // 3つの図柄が完全一致しているか判定
             if (s1.id === s2.id && s2.id === s3.id) {
                 state.winLines.push(l);
                 payout += s1.pay;
@@ -206,7 +210,7 @@
         ctx.lineWidth = 4;
         ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
 
-        // 上部ランプ ＆ メーター
+        // ランプ ＆ メーター
         ctx.fillStyle = '#2c221e';
         ctx.fillRect(15, 15, 330, 70);
         ctx.strokeStyle = '#8c7025';
@@ -258,14 +262,14 @@
         ctx.strokeRect(25, reelY - 5, 310, rowH * 3 + 10);
 
         state.reels.forEach((r, i) => {
-            // ⏬ 上から下への回転（posを加算してオフセットを下方向にスライド）
+            // 上から下への回転
             if (r.spinning) {
                 r.pos = (r.pos + r.speed) % REEL_STRIP.length;
             }
 
             const rx = reelX[i];
             const baseIndex = Math.floor(r.pos);
-            const offset = (r.pos - baseIndex) * rowH; // 0 ~ rowH (下へ流れる)
+            const offset = (r.pos - baseIndex) * rowH;
 
             ctx.save();
             ctx.beginPath();
@@ -275,9 +279,9 @@
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(rx, reelY, reelW, rowH * 3);
 
-            // コマ描画（上から下へ移動）
-            for (let row = -1; row <= 4; row++) {
-                const sIdx = ((baseIndex - row) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
+            // ✅ 判定と完全に同期させたコマ描画 (上から下へ流れる)
+            for (let row = -1; row <= 3; row++) {
+                const sIdx = ((baseIndex + row - 1) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
                 const sym = REEL_STRIP[sIdx];
                 const sy = reelY + row * rowH + offset;
 
