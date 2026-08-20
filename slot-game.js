@@ -1,9 +1,9 @@
 /**
- * 🎰 パチスロ 琴嵐（専用スクリプト）
- * ・クレジット0時「インベーダーもやってね」案内 ＆ STARTで自動補充
- * ・嵐ランプ点灯時はリプレイがすべて「7」に変化（7が大量出現して超当たりやすい！）
- * ・1/100の確率で中リールが逆回転するプレミア怪奇演出⚡
- * ・雷鳴演出 ＆ 嵐専用激アツBGM
+ * 🎰 パチスロ 琴嵐（紙吹雪演出 ＆ 1000枚突破祝賀 ＆ 777表示維持版）
+ * ・777大当たり時に画面全体へ舞い散る紙吹雪エフェクト🎉
+ * ・嵐ランプ点灯時の7変化を次のゲーム開始まで完全維持（777揃いが消えない！）
+ * ・クレジット1000枚突破時に黄金メッセージ「おめでとう、今月も琴嵐をよろしく！」
+ * ・1/100中リール逆回転 ＆ 雷鳴エフェクト ＆ 激アツBGM
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -105,7 +105,7 @@
     function playFanfare() {
         try {
             const ac = getAudio();
-            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
             notes.forEach((freq, i) => {
                 const now = ac.currentTime + (i * 0.12);
                 const osc = ac.createOscillator();
@@ -114,18 +114,18 @@
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(freq, now);
                 g.gain.setValueAtTime(0.35, now);
-                g.gain.linearRampToValueAtTime(0.001, now + 0.35);
+                g.gain.linearRampToValueAtTime(0.001, now + 0.4);
 
                 osc.connect(g);
                 g.connect(ac.destination);
 
                 osc.start(now);
-                osc.stop(now + 0.35);
+                osc.stop(now + 0.4);
             });
         } catch (e) {}
     }
 
-    // 🎵 回転中 BGMシーケンサー
+    // 🎵 BGMシーケンサー
     let bgmTimer = null;
     let bgmIndex = 0;
 
@@ -184,6 +184,52 @@
     }
 
     // ==========================================================================
+    // 🎊 紙吹雪パーティクルシステム
+    // ==========================================================================
+    let confettiParticles = [];
+
+    function spawnConfetti() {
+        confettiParticles = [];
+        const colors = ['#ffd700', '#ff3366', '#00ffcc', '#ffffff', '#f4a261', '#ff0055', '#ffe600'];
+        for (let i = 0; i < 80; i++) {
+            confettiParticles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * -canvas.height * 0.8,
+                w: Math.random() * 9 + 5,
+                h: Math.random() * 6 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                vx: (Math.random() - 0.5) * 2.5,
+                vy: Math.random() * 2.5 + 2,
+                rot: Math.random() * Math.PI * 2,
+                vrot: (Math.random() - 0.5) * 0.08
+            });
+        }
+    }
+
+    function updateAndDrawConfetti() {
+        if (confettiParticles.length === 0) return;
+
+        confettiParticles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.rot += p.vrot;
+
+            // 画面下に消えたら上から再出現
+            if (p.y > canvas.height + 10) {
+                p.y = -15;
+                p.x = Math.random() * canvas.width;
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+        });
+    }
+
+    // ==========================================================================
     // 🎰 図柄＆配当設定
     // ==========================================================================
     const SYMBOLS = {
@@ -204,12 +250,12 @@
         SYMBOLS.BELL
     ];
 
-    // ⚡ 嵐ランプ点灯時にリプレイを「7」に化けさせる取得関数
-    function getSymbolAt(index, isArashi) {
+    // ⚡ 嵐ランプ中または777当選維持中にリプレイを「7」に化けさせる
+    function getSymbolAt(index, isTransformed) {
         const normalizedIndex = (Math.floor(index) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
         const sym = REEL_STRIP[normalizedIndex];
-        if (isArashi && sym.id === SYMBOLS.REPLAY.id) {
-            return SYMBOLS.SEVEN; // リプレイがすべて7に変化
+        if (isTransformed && sym.id === SYMBOLS.REPLAY.id) {
+            return SYMBOLS.SEVEN;
         }
         return sym;
     }
@@ -217,7 +263,8 @@
     const state = {
         credit: 50, bet: 3, win: 0, isReplay: false,
         status: 'IDLE', flashLamp: false, lampGlow: 0,
-        isCenterReverse: false, // 中リール逆回転フラグ
+        isCenterReverse: false,
+        isBigWon: false, // 777表示＆紙吹雪維持フラグ
         message: 'STARTボタンでレバーオン！',
         reels: [
             { pos: 0, speed: 0, spinning: false, stopped: true },
@@ -237,7 +284,11 @@
         if (state.status !== 'IDLE') return;
         unlockAudio();
 
-        // 🪙 クレジット不足時の自動補充
+        // 前回の777演出・紙吹雪をリセット
+        state.isBigWon = false;
+        confettiParticles = [];
+
+        // クレジット不足時の自動補充
         if (!state.isReplay) {
             if (state.credit < state.bet) {
                 state.credit += 50;
@@ -264,7 +315,7 @@
             state.message = 'ボタンを押してリールを止めよう！';
         }
 
-        // 🌀 1/100の確率で中リール逆回転演出発動
+        // 1/100 中リール逆回転
         state.isCenterReverse = (Math.random() < 0.01);
         if (state.isCenterReverse) {
             state.message = '⚡【怪奇演出】中リール逆回転中！？⚡';
@@ -275,7 +326,6 @@
         state.reels.forEach((r, idx) => {
             r.spinning = true;
             r.stopped = false;
-            // 中リールのみ逆回転の場合はマイナス速度
             if (idx === 1 && state.isCenterReverse) {
                 r.speed = -baseSpeed;
             } else {
@@ -299,7 +349,7 @@
         
         let stopPos = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
 
-        // 🧲 嵐ランプ点灯時：最大4コマの引き込みアシスト
+        // 嵐ランプ点灯時：最大4コマの引き込みアシスト
         if (state.flashLamp) {
             for (let slip = 0; slip <= 4; slip++) {
                 const checkPos = (stopPos + slip) % REEL_STRIP.length;
@@ -326,17 +376,16 @@
         let isRep = false;
         let isBig = false;
 
-        const isArashi = state.flashLamp;
+        const isTransformed = state.flashLamp || state.isBigWon;
 
-        // 各リールの 上段(t)、中段(c)、下段(b) の図柄（嵐時はリプレイが7に化けた状態で判定）
         const grid = state.reels.map(r => {
             const c = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
             const t = (c - 1 + REEL_STRIP.length) % REEL_STRIP.length;
             const b = (c + 1) % REEL_STRIP.length;
             return [
-                getSymbolAt(t, isArashi),
-                getSymbolAt(c, isArashi),
-                getSymbolAt(b, isArashi)
+                getSymbolAt(t, isTransformed),
+                getSymbolAt(c, isTransformed),
+                getSymbolAt(b, isTransformed)
             ];
         });
 
@@ -364,27 +413,39 @@
             state.isReplay = isRep;
 
             if (isBig) {
-                state.message = '🎉 大当たり！ 7揃い 100枚獲得！ 🎉';
+                state.isBigWon = true; // 次のゲームまで777表示を固定
+                spawnConfetti(); // 🎊 紙吹雪発射！
                 playFanfare();
+
+                // 1000枚突破判定
+                if (state.credit >= 1000) {
+                    state.message = '✨ おめでとう、今月も琴嵐をよろしく！ ✨';
+                } else {
+                    state.message = '🎉 大当たり！ 777揃い 100枚獲得！ 🎉';
+                }
             } else if (isRep) {
                 state.message = '🔄 REPLAY！もう1回無料！';
                 playTone(880, 'sine', 0.12, 0.25);
             } else {
-                state.message = `✨ ${payout}枚 払い出し！ ごっつあんです！`;
+                if (state.credit >= 1000) {
+                    state.message = '✨ おめでとう、今月も琴嵐をよろしく！ ✨';
+                } else {
+                    state.message = `✨ ${payout}枚 払い出し！ ごっつあんです！`;
+                }
                 playTone(880, 'sine', 0.12, 0.25);
             }
         } else {
-            // 👾 クレジットが0になった時の特別メッセージ
-            if (state.credit <= 0) {
+            if (state.credit >= 1000) {
+                state.message = '✨ おめでとう、今月も琴嵐をよろしく！ ✨';
+            } else if (state.credit <= 0) {
                 state.message = 'クレジット0！インベーダーもやってね👾 (STARTで+50枚)';
             } else {
                 state.message = 'ハズレ… 次回に期待！';
             }
         }
 
-        if (isBig || !state.flashLamp) {
-            state.flashLamp = false;
-        }
+        // 嵐ランプ消灯（777表示は isBigWon が引き継ぐ）
+        state.flashLamp = false;
 
         setTimeout(() => { state.status = 'IDLE'; }, 500);
     }
@@ -428,7 +489,7 @@
 
         ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(230, 23, 105, 54);
-        ctx.fillStyle = '#00ffcc';
+        ctx.fillStyle = state.credit >= 1000 ? '#ffd700' : '#00ffcc';
         ctx.font = '11px monospace';
         ctx.textAlign = 'left';
         ctx.fillText(`CREDIT:${state.credit}`, 236, 40);
@@ -449,6 +510,8 @@
         ctx.lineWidth = 3;
         ctx.strokeRect(25, reelY - 5, 310, rowH * 3 + 10);
 
+        const isTransformed = state.flashLamp || state.isBigWon;
+
         state.reels.forEach((r, i) => {
             if (r.spinning) {
                 r.pos = (r.pos + r.speed + REEL_STRIP.length) % REEL_STRIP.length;
@@ -468,8 +531,7 @@
 
             for (let row = -1; row <= 3; row++) {
                 const rawIdx = (baseIndex + row - 1 + REEL_STRIP.length) % REEL_STRIP.length;
-                // 嵐ランプ点灯時はリプレイが7として描画される
-                const sym = getSymbolAt(rawIdx, state.flashLamp);
+                const sym = getSymbolAt(rawIdx, isTransformed);
                 const sy = reelY + row * rowH + offset;
 
                 ctx.strokeStyle = '#e0e0e0';
@@ -519,13 +581,33 @@
             });
         }
 
+        // 🎊 紙吹雪の描画（リール・枠の上に重ねる）
+        updateAndDrawConfetti();
+
         // メッセージバー
         ctx.fillStyle = '#111';
         ctx.fillRect(25, 283, 310, 22);
-        ctx.fillStyle = state.flashLamp ? '#ff3366' : (state.credit <= 0 ? '#ffd700' : '#00ffcc');
-        ctx.font = '11px sans-serif';
+
+        // 1000枚突破時は金色＆発光
+        if (state.credit >= 1000) {
+            ctx.fillStyle = '#ffd700';
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 8;
+        } else if (state.flashLamp) {
+            ctx.fillStyle = '#ff3366';
+            ctx.shadowBlur = 0;
+        } else if (state.credit <= 0) {
+            ctx.fillStyle = '#f4a261';
+            ctx.shadowBlur = 0;
+        } else {
+            ctx.fillStyle = '#00ffcc';
+            ctx.shadowBlur = 0;
+        }
+
+        ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(state.message, 180, 298);
+        ctx.shadowBlur = 0; // リセット
 
         // スタートボタン
         const canStart = state.status === 'IDLE';
