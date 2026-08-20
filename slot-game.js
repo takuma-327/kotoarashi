@@ -1,8 +1,9 @@
 /**
- * 🎰 パチスロ 琴嵐（低速目押しサポート ＆ 7引き込みアシスト搭載版）
- * ・嵐ランプ点灯時はリールが超低速回転に変化（目で見て狙える！）
- * ・嵐ランプ点灯時は最大4コマの「7」引き込み滑り制御が発動
- * ・雷鳴演出 ＆ 専用激アツBGM
+ * 🎰 パチスロ 琴嵐（専用スクリプト）
+ * ・クレジット0時「インベーダーもやってね」案内 ＆ STARTで自動補充
+ * ・嵐ランプ点灯時はリプレイがすべて「7」に変化（7が大量出現して超当たりやすい！）
+ * ・1/100の確率で中リールが逆回転するプレミア怪奇演出⚡
+ * ・雷鳴演出 ＆ 嵐専用激アツBGM
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -33,7 +34,6 @@
         }
     }
 
-    // 単音SE生成
     function playTone(freq, type, duration, gainVal = 0.25) {
         try {
             const ac = getAudio();
@@ -54,7 +54,6 @@
         } catch (e) {}
     }
 
-    // ⚡ 雷鳴サウンドエフェクト
     function playThunderSound() {
         try {
             const ac = getAudio();
@@ -103,7 +102,6 @@
         } catch (e) {}
     }
 
-    // 大当たりファンファーレ
     function playFanfare() {
         try {
             const ac = getAudio();
@@ -206,9 +204,20 @@
         SYMBOLS.BELL
     ];
 
+    // ⚡ 嵐ランプ点灯時にリプレイを「7」に化けさせる取得関数
+    function getSymbolAt(index, isArashi) {
+        const normalizedIndex = (Math.floor(index) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
+        const sym = REEL_STRIP[normalizedIndex];
+        if (isArashi && sym.id === SYMBOLS.REPLAY.id) {
+            return SYMBOLS.SEVEN; // リプレイがすべて7に変化
+        }
+        return sym;
+    }
+
     const state = {
         credit: 50, bet: 3, win: 0, isReplay: false,
         status: 'IDLE', flashLamp: false, lampGlow: 0,
+        isCenterReverse: false, // 中リール逆回転フラグ
         message: 'STARTボタンでレバーオン！',
         reels: [
             { pos: 0, speed: 0, spinning: false, stopped: true },
@@ -228,10 +237,11 @@
         if (state.status !== 'IDLE') return;
         unlockAudio();
 
+        // 🪙 クレジット不足時の自動補充
         if (!state.isReplay) {
             if (state.credit < state.bet) {
                 state.credit += 50;
-                state.message = 'メダル自動補充(+50枚)';
+                state.message = 'クレジット補充(+50枚)！ごっつあんです！';
             }
             state.credit -= state.bet;
         } else {
@@ -249,18 +259,28 @@
         if (rand < 8) {
             state.flashLamp = true;
             playThunderSound();
-            state.message = '⚡ 嵐点灯！低速回転中！7を狙え！ ⚡';
+            state.message = '⚡ 嵐点灯！7大量発生中！狙え！ ⚡';
         } else {
             state.message = 'ボタンを押してリールを止めよう！';
         }
 
-        // 🎯 回転速度の調整：通常時は0.30、嵐ランプ点灯時は0.16（目押し超低速）
-        const currentSpeed = state.flashLamp ? 0.16 : 0.30;
+        // 🌀 1/100の確率で中リール逆回転演出発動
+        state.isCenterReverse = (Math.random() < 0.01);
+        if (state.isCenterReverse) {
+            state.message = '⚡【怪奇演出】中リール逆回転中！？⚡';
+        }
+
+        const baseSpeed = state.flashLamp ? 0.16 : 0.30;
 
         state.reels.forEach((r, idx) => {
             r.spinning = true;
             r.stopped = false;
-            r.speed = currentSpeed;
+            // 中リールのみ逆回転の場合はマイナス速度
+            if (idx === 1 && state.isCenterReverse) {
+                r.speed = -baseSpeed;
+            } else {
+                r.speed = baseSpeed;
+            }
             state.btnStops[idx].active = true;
         });
 
@@ -277,14 +297,14 @@
         r.stopped = true;
         state.btnStops[index].active = false;
         
-        let stopPos = Math.round(r.pos) % REEL_STRIP.length;
+        let stopPos = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
 
-        // 🧲 嵐ランプ点灯時：最大4コマの「7」引き込みアシスト
+        // 🧲 嵐ランプ点灯時：最大4コマの引き込みアシスト
         if (state.flashLamp) {
             for (let slip = 0; slip <= 4; slip++) {
                 const checkPos = (stopPos + slip) % REEL_STRIP.length;
-                // 中段が7になる位置（checkPos）または上段・下段が7になる位置を引き込み
-                if (REEL_STRIP[checkPos].id === SYMBOLS.SEVEN.id) {
+                const sym = getSymbolAt(checkPos, true);
+                if (sym.id === SYMBOLS.SEVEN.id) {
                     stopPos = checkPos;
                     break;
                 }
@@ -306,11 +326,18 @@
         let isRep = false;
         let isBig = false;
 
+        const isArashi = state.flashLamp;
+
+        // 各リールの 上段(t)、中段(c)、下段(b) の図柄（嵐時はリプレイが7に化けた状態で判定）
         const grid = state.reels.map(r => {
             const c = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
             const t = (c - 1 + REEL_STRIP.length) % REEL_STRIP.length;
             const b = (c + 1) % REEL_STRIP.length;
-            return [REEL_STRIP[t], REEL_STRIP[c], REEL_STRIP[b]];
+            return [
+                getSymbolAt(t, isArashi),
+                getSymbolAt(c, isArashi),
+                getSymbolAt(b, isArashi)
+            ];
         });
 
         const lines = [
@@ -347,7 +374,12 @@
                 playTone(880, 'sine', 0.12, 0.25);
             }
         } else {
-            state.message = 'ハズレ… 次回に期待！';
+            // 👾 クレジットが0になった時の特別メッセージ
+            if (state.credit <= 0) {
+                state.message = 'クレジット0！インベーダーもやってね👾 (STARTで+50枚)';
+            } else {
+                state.message = 'ハズレ… 次回に期待！';
+            }
         }
 
         if (isBig || !state.flashLamp) {
@@ -419,7 +451,7 @@
 
         state.reels.forEach((r, i) => {
             if (r.spinning) {
-                r.pos = (r.pos + r.speed) % REEL_STRIP.length;
+                r.pos = (r.pos + r.speed + REEL_STRIP.length) % REEL_STRIP.length;
             }
 
             const rx = reelX[i];
@@ -435,8 +467,9 @@
             ctx.fillRect(rx, reelY, reelW, rowH * 3);
 
             for (let row = -1; row <= 3; row++) {
-                const sIdx = ((baseIndex + row - 1) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
-                const sym = REEL_STRIP[sIdx];
+                const rawIdx = (baseIndex + row - 1 + REEL_STRIP.length) % REEL_STRIP.length;
+                // 嵐ランプ点灯時はリプレイが7として描画される
+                const sym = getSymbolAt(rawIdx, state.flashLamp);
                 const sy = reelY + row * rowH + offset;
 
                 ctx.strokeStyle = '#e0e0e0';
@@ -489,7 +522,7 @@
         // メッセージバー
         ctx.fillStyle = '#111';
         ctx.fillRect(25, 283, 310, 22);
-        ctx.fillStyle = state.flashLamp ? '#ff3366' : '#00ffcc';
+        ctx.fillStyle = state.flashLamp ? '#ff3366' : (state.credit <= 0 ? '#ffd700' : '#00ffcc');
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(state.message, 180, 298);
@@ -505,7 +538,12 @@
         ctx.fillStyle = canStart ? '#2c2520' : '#888';
         ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(state.isReplay ? '🔄 REPLAY START (0枚)' : '🎰 START / レバーオン (3枚)', 180, state.btnStart.y + 28);
+
+        let btnLabel = '🎰 START / レバーオン (3枚)';
+        if (state.isReplay) btnLabel = '🔄 REPLAY START (0枚)';
+        else if (state.credit < state.bet) btnLabel = '🪙 メダル補充＆START (+50枚)';
+
+        ctx.fillText(btnLabel, 180, state.btnStart.y + 28);
 
         // ストップボタン
         state.btnStops.forEach((b, idx) => {
