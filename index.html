@@ -265,7 +265,6 @@
             <p class="copyright">&copy; 地鶏家 琴嵐 天満店 All Rights Reserved.</p>
         </div>
     </footer>
-
    <!-- 🕹️ ゲームポップアップ ＆ 2画面Canvas -->
     <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ" data-i18n="game_btn">
         🎮 琴嵐 ゲイム
@@ -288,7 +287,7 @@
             <!-- パチスロ専用 Canvas -->
             <canvas id="slotGameCanvas" width="360" height="500"></canvas>
 
-            <!-- インベーダー専用 Canvas (既存のドット絵がそのまま表示されます) -->
+            <!-- インベーダー専用 Canvas -->
             <canvas id="gameCanvas" width="360" height="500" style="display: none;"></canvas>
             
             <div id="game-instruction-text" class="game-mobile-instruction">
@@ -298,7 +297,7 @@
         </div>
     </div>
 
-    <!-- 外部スクリプトの読み込み -->
+    <!-- 外部スクリプトの読み込み（3つすべて読み込みます） -->
     <script src="game.js"></script>
     <script src="slot-game.js"></script>
     <script src="slot.js"></script>
@@ -335,11 +334,32 @@
             }
         }
 
-        // モーダルオープン時の初期起動
-        document.getElementById('game-trigger').addEventListener('click', () => {
+        // モーダル開閉制御
+        const gameTrigger = document.getElementById('game-trigger');
+        const gameModal = document.getElementById('game-modal');
+        const gameCloseBtn = document.getElementById('game-close-btn');
+
+        gameTrigger.addEventListener('click', () => {
+            gameModal.classList.add('active');
             const isSlotActive = document.getElementById('tab-slot').classList.contains('active');
-            if (isSlotActive && typeof window.startSlotGame === 'function') {
-                window.startSlotGame();
+            if (isSlotActive) {
+                if (typeof window.startSlotGame === 'function') window.startSlotGame();
+            } else {
+                if (typeof window.initGame === 'function') window.initGame();
+            }
+        });
+
+        gameCloseBtn.addEventListener('click', () => {
+            gameModal.classList.remove('active');
+            if (typeof window.stopSlotGame === 'function') window.stopSlotGame();
+            if (typeof window.stopGame === 'function') window.stopGame();
+        });
+
+        gameModal.addEventListener('click', (e) => {
+            if (e.target === gameModal) {
+                gameModal.classList.remove('active');
+                if (typeof window.stopSlotGame === 'function') window.stopSlotGame();
+                if (typeof window.stopGame === 'function') window.stopGame();
             }
         });
     </script>
