@@ -266,7 +266,7 @@
         </div>
     </footer>
 
-    <!-- 🕹️ ゲームポップアップ -->
+    <!-- 🕹️ ゲームポップアップ ＆ タブ切替 -->
     <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ" data-i18n="game_btn">
         🎮 琴嵐 ゲイム
     </div>
@@ -274,10 +274,22 @@
     <div id="game-modal" class="game-modal-overlay">
         <div class="game-modal-content">
             <span id="game-close-btn" class="game-close-btn">&times;</span>
+            
+            <!-- 🎮 ゲーム選択タブ -->
+            <div class="game-tab-container">
+                <button type="button" class="game-tab-btn active" data-game="slot" onclick="switchGame('slot')">
+                    🎰 パチスロ 琴嵐
+                </button>
+                <button type="button" class="game-tab-btn" data-game="invader" onclick="switchGame('invader')">
+                    👾 琴嵐 インベーダー
+                </button>
+            </div>
+
             <canvas id="gameCanvas" width="360" height="500"></canvas>
-            <div class="game-mobile-instruction" data-i18n="game_instruction">
-                PC: ← →キー（移動） / Space（連射）<br>
-                スマホ: 画面スライド（移動＆自動連射）
+            
+            <div id="game-instruction-text" class="game-mobile-instruction">
+                PC: Space（スタート） / Z, X, C（ストップ）<br>
+                スマホ: 画面のボタンをタップ
             </div>
         </div>
     </div>
