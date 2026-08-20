@@ -1,11 +1,14 @@
 /**
  * 🎰 パチスロ 琴嵐（専用スクリプト）
+ * ・上から下へのリール回転
+ * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
     const canvas = document.getElementById('slotGameCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    // 🔊 サウンド（Web Audio API）
     let audioCtx = null;
     function getAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -27,21 +30,40 @@
         } catch (e) {}
     }
 
+    function playFanfare() {
+        try {
+            const ac = getAudio();
+            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+            notes.forEach((freq, i) => {
+                const osc = ac.createOscillator();
+                const g = ac.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, ac.currentTime + (i * 0.1));
+                g.gain.setValueAtTime(0.3, ac.currentTime + (i * 0.1));
+                g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + (i * 0.1) + 0.35);
+                osc.connect(g); g.connect(ac.destination);
+                osc.start(ac.currentTime + (i * 0.1));
+                osc.stop(ac.currentTime + (i * 0.1) + 0.35);
+            });
+        } catch (e) {}
+    }
+
+    // 🎰 図柄＆配当設定
     const SYMBOLS = {
-        SEVEN:   { id: 0, name: '7', color: '#ff2a2a', pay: 300 },
-        CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 100 },
-        BELL:    { id: 2, name: 'ベル', icon: '🔔', pay: 10 },
-        CHICKEN: { id: 3, name: '地鶏', icon: '🍗', pay: 8 },
-        BEER:    { id: 4, name: 'ビール', icon: '🍺', pay: 5 },
-        REPLAY:  { id: 5, name: 'リプレイ', icon: '🔄', pay: 0 }
+        SEVEN:   { id: 0, name: '7',     color: '#ff2a2a', isSpecial: true, pay: 100 }, // 大当たり 100枚
+        CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 48 },  // 48枚
+        BEER:    { id: 2, name: '生ビール', icon: '🍺', pay: 24 },  // 24枚
+        CHICKEN: { id: 3, name: '地鶏',   icon: '🍗', pay: 18 },  // 18枚
+        BELL:    { id: 4, name: 'ベル',   icon: '🔔', pay: 6 },   // 6枚
+        REPLAY:  { id: 5, name: 'リプレイ', icon: '🔄', pay: 0 }    // 再遊技
     };
 
     const REEL_STRIP = [
         SYMBOLS.SEVEN,   SYMBOLS.REPLAY,  SYMBOLS.BELL,    SYMBOLS.CHICKEN,
-        SYMBOLS.CHANKO,  SYMBOLS.BEER,    SYMBOLS.BELL,    SYMBOLS.SEVEN,
-        SYMBOLS.CHICKEN, SYMBOLS.REPLAY,  SYMBOLS.CHANKO,  SYMBOLS.BELL,
-        SYMBOLS.BEER,    SYMBOLS.SEVEN,   SYMBOLS.REPLAY,  SYMBOLS.CHICKEN,
-        SYMBOLS.BELL,    SYMBOLS.CHANKO,  SYMBOLS.BEER,    SYMBOLS.REPLAY,
+        SYMBOLS.BEER,    SYMBOLS.CHANKO,  SYMBOLS.BELL,    SYMBOLS.SEVEN,
+        SYMBOLS.CHICKEN, SYMBOLS.REPLAY,  SYMBOLS.BEER,    SYMBOLS.BELL,
+        SYMBOLS.CHANKO,  SYMBOLS.SEVEN,   SYMBOLS.REPLAY,  SYMBOLS.CHICKEN,
+        SYMBOLS.BELL,    SYMBOLS.BEER,    SYMBOLS.CHANKO,  SYMBOLS.REPLAY,
         SYMBOLS.BELL
     ];
 
@@ -83,11 +105,12 @@
         state.status = 'SPINNING';
         playTone(300, 'sawtooth', 0.12, 0.3);
 
+        // 内部抽選 (5%で7大当たり告知)
         const rand = Math.random() * 100;
-        if (rand < 9) {
+        if (rand < 5) {
             state.flashLamp = true;
-            playTone(120, 'sawtooth', 0.15, 0.5);
-            state.message = '⚡ 嵐ランプ点灯！激アツ！ ⚡';
+            playTone(120, 'sawtooth', 0.15, 0.5); // ガコッ！告知音
+            state.message = '⚡ 嵐ランプ点灯！7を狙え！ ⚡';
         }
 
         state.reels.forEach((r, idx) => {
@@ -106,6 +129,8 @@
         r.spinning = false;
         r.stopped = true;
         state.btnStops[index].active = false;
+        
+        // 滑り補正
         r.pos = Math.round(r.pos) % REEL_STRIP.length;
 
         if (state.reels.every(reel => reel.stopped)) {
@@ -121,12 +146,13 @@
         let isBig = false;
 
         const grid = state.reels.map(r => {
-            const c = Math.round(r.pos) % REEL_STRIP.length;
+            const c = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
             const t = (c - 1 + REEL_STRIP.length) % REEL_STRIP.length;
             const b = (c + 1) % REEL_STRIP.length;
             return [REEL_STRIP[t], REEL_STRIP[c], REEL_STRIP[b]];
         });
 
+        // 5ライン判定（上段・中段・下段・右下がり・右上がり）
         const lines = [
             { slots: [grid[0][0], grid[1][0], grid[2][0]], y: 130 },
             { slots: [grid[0][1], grid[1][1], grid[2][1]], y: 190 },
@@ -151,8 +177,8 @@
             state.isReplay = isRep;
 
             if (isBig) {
-                state.message = '🎉 BIG BONUS 300枚獲得！ 🎉';
-                playTone(523, 'triangle', 0.4, 0.4);
+                state.message = '🎉 大当たり！ 7揃い 100枚獲得！ 🎉';
+                playFanfare();
             } else if (isRep) {
                 state.message = '🔄 REPLAY！もう1回無料！';
                 playTone(987, 'sine', 0.1, 0.2);
@@ -164,7 +190,7 @@
             state.message = 'ハズレ… 次回に期待！';
         }
 
-        if (payout >= 100 || !state.flashLamp) {
+        if (isBig || !state.flashLamp) {
             state.flashLamp = false;
         }
 
@@ -175,10 +201,12 @@
         ctx.fillStyle = '#1e1815';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // 枠
         ctx.strokeStyle = '#d4af37';
         ctx.lineWidth = 4;
         ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
 
+        // 上部ランプ ＆ メーター
         ctx.fillStyle = '#2c221e';
         ctx.fillRect(15, 15, 330, 70);
         ctx.strokeStyle = '#8c7025';
@@ -217,6 +245,7 @@
         ctx.fillStyle = '#ff3366';
         ctx.fillText(`WIN:   ${state.win}`, 236, 68);
 
+        // リール窓
         const reelY = 100;
         const rowH = 60;
         const reelW = 80;
@@ -229,11 +258,14 @@
         ctx.strokeRect(25, reelY - 5, 310, rowH * 3 + 10);
 
         state.reels.forEach((r, i) => {
-            if (r.spinning) r.pos = (r.pos + r.speed) % REEL_STRIP.length;
+            // ⏬ 上から下への回転（posを加算してオフセットを下方向にスライド）
+            if (r.spinning) {
+                r.pos = (r.pos + r.speed) % REEL_STRIP.length;
+            }
 
             const rx = reelX[i];
             const baseIndex = Math.floor(r.pos);
-            const offset = (r.pos - baseIndex) * rowH;
+            const offset = (r.pos - baseIndex) * rowH; // 0 ~ rowH (下へ流れる)
 
             ctx.save();
             ctx.beginPath();
@@ -243,10 +275,11 @@
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(rx, reelY, reelW, rowH * 3);
 
+            // コマ描画（上から下へ移動）
             for (let row = -1; row <= 4; row++) {
-                const sIdx = (baseIndex + row + REEL_STRIP.length * 2) % REEL_STRIP.length;
+                const sIdx = ((baseIndex - row) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
                 const sym = REEL_STRIP[sIdx];
-                const sy = reelY + row * rowH - offset;
+                const sy = reelY + row * rowH + offset;
 
                 ctx.strokeStyle = '#e0e0e0';
                 ctx.lineWidth = 1;
@@ -267,6 +300,7 @@
                 }
             }
 
+            // 立体シャドウ
             const grad = ctx.createLinearGradient(rx, reelY, rx, reelY + rowH * 3);
             grad.addColorStop(0, 'rgba(0,0,0,0.4)');
             grad.addColorStop(0.15, 'rgba(0,0,0,0)');
@@ -278,6 +312,7 @@
             ctx.restore();
         });
 
+        // 当たりライン描画
         if (state.winLines.length > 0) {
             ctx.strokeStyle = '#ffff00';
             ctx.lineWidth = 4;
@@ -294,6 +329,7 @@
             });
         }
 
+        // メッセージバー
         ctx.fillStyle = '#111';
         ctx.fillRect(25, 283, 310, 22);
         ctx.fillStyle = '#00ffcc';
@@ -301,6 +337,7 @@
         ctx.textAlign = 'center';
         ctx.fillText(state.message, 180, 298);
 
+        // スタートボタン
         const canStart = state.status === 'IDLE';
         ctx.fillStyle = canStart ? '#f4a261' : '#555';
         ctx.beginPath();
@@ -313,6 +350,7 @@
         ctx.textAlign = 'center';
         ctx.fillText(state.isReplay ? '🔄 REPLAY START (0枚)' : '🎰 START / レバーオン (3枚)', 180, state.btnStart.y + 28);
 
+        // ストップボタン
         state.btnStops.forEach((b, idx) => {
             ctx.fillStyle = b.active ? '#9e2a2b' : '#333';
             ctx.beginPath();
@@ -325,10 +363,11 @@
             ctx.fillText(`STOP ${idx + 1}`, b.x + b.w / 2, b.y + 33);
         });
 
-        ctx.fillStyle = '#888';
+        // 配当表フッター
+        ctx.fillStyle = '#aaa';
         ctx.font = '10px sans-serif';
-        ctx.fillText('PC: Space(スタート) / Z, X, C(ストップ)', 180, 455);
-        ctx.fillText('7揃い:300枚 / 鍋:100枚 / ベル:10枚 / 地鶏:8枚', 180, 475);
+        ctx.fillText('配当: 7(100枚) / ちゃんこ(48枚) / ビール(24枚)', 180, 455);
+        ctx.fillText('地鶏(18枚) / ベル(6枚) / リプレイ(再遊技)', 180, 472);
     }
 
     let animId = null;
