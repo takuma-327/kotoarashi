@@ -1,7 +1,7 @@
 /**
  * 🎰 パチスロ 琴嵐（専用スクリプト）
  * ・上から下へのスムーズなリール回転
- * ・描画と当たり判定の完全一致修正版
+ * ・回転中BGM（パチスロ風8bitメロディループ）搭載
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -9,7 +9,9 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // 🔊 サウンド（Web Audio API）
+    // ==========================================================================
+    // 🔊 サウンド ＆ BGMエンジン（Web Audio API）
+    // ==========================================================================
     let audioCtx = null;
     function getAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -17,6 +19,7 @@
         return audioCtx;
     }
 
+    // 単音SE
     function playTone(freq, type, duration, gainVal = 0.2) {
         try {
             const ac = getAudio();
@@ -31,6 +34,7 @@
         } catch (e) {}
     }
 
+    // 大当たりファンファーレ
     function playFanfare() {
         try {
             const ac = getAudio();
@@ -49,7 +53,51 @@
         } catch (e) {}
     }
 
+    // 🎵 リール回転中 BGMシーケンサー（和風レトロパチスロ調）
+    let bgmTimer = null;
+    let bgmNoteIndex = 0;
+    // メロディ周波数配列 (Dマイナーペンタトニック: D4, F4, G4, A4, C5, D5...)
+    const bgmNotes = [
+        293.66, 349.23, 392.00, 440.00, 523.25, 587.33, 523.25, 440.00,
+        392.00, 440.00, 523.25, 587.33, 698.46, 587.33, 523.25, 440.00
+    ];
+
+    function startSpinBGM() {
+        stopSpinBGM();
+        bgmNoteIndex = 0;
+        const ac = getAudio();
+        const noteDuration = 0.11; // テンポ
+
+        bgmTimer = setInterval(() => {
+            if (!state.reels.some(r => r.spinning)) {
+                stopSpinBGM();
+                return;
+            }
+            try {
+                const freq = bgmNotes[bgmNoteIndex % bgmNotes.length];
+                const osc = ac.createOscillator();
+                const g = ac.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, ac.currentTime);
+                g.gain.setValueAtTime(0.12, ac.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + noteDuration);
+                osc.connect(g); g.connect(ac.destination);
+                osc.start(); osc.stop(ac.currentTime + noteDuration);
+                bgmNoteIndex++;
+            } catch (e) {}
+        }, noteDuration * 1000);
+    }
+
+    function stopSpinBGM() {
+        if (bgmTimer) {
+            clearInterval(bgmTimer);
+            bgmTimer = null;
+        }
+    }
+
+    // ==========================================================================
     // 🎰 図柄＆配当設定
+    // ==========================================================================
     const SYMBOLS = {
         SEVEN:   { id: 0, name: '7',     color: '#ff2a2a', pay: 100 }, // 大当たり 100枚
         CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 48 },   // 48枚
@@ -110,7 +158,7 @@
         const rand = Math.random() * 100;
         if (rand < 5) {
             state.flashLamp = true;
-            playTone(120, 'sawtooth', 0.15, 0.5); // ガコッ！音
+            playTone(120, 'sawtooth', 0.15, 0.5); // ガコッ！告知音
             state.message = '⚡ 嵐ランプ点灯！7を狙え！ ⚡';
         }
 
@@ -120,6 +168,9 @@
             r.speed = 0.45;
             state.btnStops[idx].active = true;
         });
+
+        // 🎵 BGMスタート
+        startSpinBGM();
     }
 
     function stopReel(index) {
@@ -131,15 +182,14 @@
         r.stopped = true;
         state.btnStops[index].active = false;
         
-        // 整数値にぴったり止める
         r.pos = Math.round(r.pos) % REEL_STRIP.length;
 
         if (state.reels.every(reel => reel.stopped)) {
+            stopSpinBGM(); // 🎵 全リール停止でBGM停止
             checkResult();
         }
     }
 
-    // ✅ 描画と完全に一致させた当たり判定
     function checkResult() {
         state.status = 'PAYING';
         state.winLines = [];
@@ -147,7 +197,6 @@
         let isRep = false;
         let isBig = false;
 
-        // 各リールの 上段(t)、中段(c)、下段(b) の図柄を取得
         const grid = state.reels.map(r => {
             const c = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
             const t = (c - 1 + REEL_STRIP.length) % REEL_STRIP.length;
@@ -155,18 +204,16 @@
             return [REEL_STRIP[t], REEL_STRIP[c], REEL_STRIP[b]];
         });
 
-        // 5ライン判定（上段・中段・下段・右下がり・右上がり）
         const lines = [
-            { slots: [grid[0][0], grid[1][0], grid[2][0]], y: 130 }, // 上段
-            { slots: [grid[0][1], grid[1][1], grid[2][1]], y: 190 }, // 中段
-            { slots: [grid[0][2], grid[1][2], grid[2][2]], y: 250 }, // 下段
-            { slots: [grid[0][0], grid[1][1], grid[2][2]], diag: 'down' }, // 斜め右下がり
-            { slots: [grid[0][2], grid[1][1], grid[2][0]], diag: 'up' }   // 斜め右上がり
+            { slots: [grid[0][0], grid[1][0], grid[2][0]], y: 130 },
+            { slots: [grid[0][1], grid[1][1], grid[2][1]], y: 190 },
+            { slots: [grid[0][2], grid[1][2], grid[2][2]], y: 250 },
+            { slots: [grid[0][0], grid[1][1], grid[2][2]], diag: 'down' },
+            { slots: [grid[0][2], grid[1][1], grid[2][0]], diag: 'up' }
         ];
 
         lines.forEach(l => {
             const [s1, s2, s3] = l.slots;
-            // 3つの図柄が完全一致しているか判定
             if (s1.id === s2.id && s2.id === s3.id) {
                 state.winLines.push(l);
                 payout += s1.pay;
@@ -262,7 +309,6 @@
         ctx.strokeRect(25, reelY - 5, 310, rowH * 3 + 10);
 
         state.reels.forEach((r, i) => {
-            // 上から下への回転
             if (r.spinning) {
                 r.pos = (r.pos + r.speed) % REEL_STRIP.length;
             }
@@ -279,7 +325,6 @@
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(rx, reelY, reelW, rowH * 3);
 
-            // ✅ 判定と完全に同期させたコマ描画 (上から下へ流れる)
             for (let row = -1; row <= 3; row++) {
                 const sIdx = ((baseIndex + row - 1) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
                 const sym = REEL_STRIP[sIdx];
@@ -304,7 +349,6 @@
                 }
             }
 
-            // 立体シャドウ
             const grad = ctx.createLinearGradient(rx, reelY, rx, reelY + rowH * 3);
             grad.addColorStop(0, 'rgba(0,0,0,0.4)');
             grad.addColorStop(0.15, 'rgba(0,0,0,0)');
@@ -424,6 +468,7 @@
     };
 
     window.stopSlotGame = function () {
+        stopSpinBGM();
         if (animId) {
             cancelAnimationFrame(animId);
             animId = null;
