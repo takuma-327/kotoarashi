@@ -266,7 +266,7 @@
         </div>
     </footer>
 
-    <!-- 🕹️ ゲームポップアップ ＆ タブ切替 -->
+   <!-- 🕹️ ゲームポップアップ ＆ 2画面Canvas -->
     <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ" data-i18n="game_btn">
         🎮 琴嵐 ゲイム
     </div>
@@ -277,15 +277,19 @@
             
             <!-- 🎮 ゲーム選択タブ -->
             <div class="game-tab-container">
-                <button type="button" class="game-tab-btn active" data-game="slot" onclick="switchGame('slot')">
+                <button type="button" id="tab-slot" class="game-tab-btn active" onclick="switchGameMode('slot')">
                     🎰 パチスロ 琴嵐
                 </button>
-                <button type="button" class="game-tab-btn" data-game="invader" onclick="switchGame('invader')">
+                <button type="button" id="tab-invader" class="game-tab-btn" onclick="switchGameMode('invader')">
                     👾 琴嵐 インベーダー
                 </button>
             </div>
 
-            <canvas id="gameCanvas" width="360" height="500"></canvas>
+            <!-- パチスロ専用 Canvas -->
+            <canvas id="slotGameCanvas" width="360" height="500"></canvas>
+
+            <!-- インベーダー専用 Canvas (既存のドット絵がそのまま表示されます) -->
+            <canvas id="gameCanvas" width="360" height="500" style="display: none;"></canvas>
             
             <div id="game-instruction-text" class="game-mobile-instruction">
                 PC: Space（スタート） / Z, X, C（ストップ）<br>
@@ -296,6 +300,48 @@
 
     <!-- 外部スクリプトの読み込み -->
     <script src="game.js"></script>
+    <script src="slot-game.js"></script>
     <script src="slot.js"></script>
+
+    <!-- 🌐 ゲーム切り替えスイッチロジック -->
+    <script>
+        function switchGameMode(mode) {
+            const slotCanvas = document.getElementById('slotGameCanvas');
+            const invaderCanvas = document.getElementById('gameCanvas');
+            const tabSlot = document.getElementById('tab-slot');
+            const tabInvader = document.getElementById('tab-invader');
+            const inst = document.getElementById('game-instruction-text');
+
+            if (mode === 'slot') {
+                tabSlot.classList.add('active');
+                tabInvader.classList.remove('active');
+                slotCanvas.style.display = 'block';
+                invaderCanvas.style.display = 'none';
+
+                if (typeof window.stopGame === 'function') window.stopGame();
+                if (typeof window.startSlotGame === 'function') window.startSlotGame();
+
+                inst.innerHTML = 'PC: Space（スタート） / Z, X, C（ストップ）<br>スマホ: 画面のボタンをタップ';
+            } else {
+                tabSlot.classList.remove('active');
+                tabInvader.classList.add('active');
+                slotCanvas.style.display = 'none';
+                invaderCanvas.style.display = 'block';
+
+                if (typeof window.stopSlotGame === 'function') window.stopSlotGame();
+                if (typeof window.initGame === 'function') window.initGame();
+
+                inst.innerHTML = 'PC: ← →（移動） / Space（連射）<br>スマホ: 画面スライド（移動＆自動連射）';
+            }
+        }
+
+        // モーダルオープン時の初期起動
+        document.getElementById('game-trigger').addEventListener('click', () => {
+            const isSlotActive = document.getElementById('tab-slot').classList.contains('active');
+            if (isSlotActive && typeof window.startSlotGame === 'function') {
+                window.startSlotGame();
+            }
+        });
+    </script>
 </body>
 </html>
