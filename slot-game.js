@@ -1,8 +1,8 @@
 /**
- * 🎰 パチスロ 琴嵐（音声修正＆BGM搭載版）
- * ・ブラウザ自動再生制限対応（AudioContext アンロック機構）
- * ・回転中8bit和風BGM ＆ 各種効果音（レバー・停止・告知・ファンファーレ）
- * ・上から下へのスムーズなリール回転
+ * 🎰 パチスロ 琴嵐（低速目押しサポート ＆ 7引き込みアシスト搭載版）
+ * ・嵐ランプ点灯時はリールが超低速回転に変化（目で見て狙える！）
+ * ・嵐ランプ点灯時は最大4コマの「7」引き込み滑り制御が発動
+ * ・雷鳴演出 ＆ 専用激アツBGM
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -11,7 +11,7 @@
     const ctx = canvas.getContext('2d');
 
     // ==========================================================================
-    // 🔊 サウンド ＆ BGMエンジン（Web Audio API 強力アンロック版）
+    // 🔊 サウンド ＆ BGMエンジン（Web Audio API）
     // ==========================================================================
     let audioCtx = null;
 
@@ -26,7 +26,6 @@
         return audioCtx;
     }
 
-    // ユーザー操作時の音声強制アンロック
     function unlockAudio() {
         const ac = getAudio();
         if (ac.state === 'suspended') {
@@ -34,7 +33,7 @@
         }
     }
 
-    // 単音SE生成（安全な線形減衰）
+    // 単音SE生成
     function playTone(freq, type, duration, gainVal = 0.25) {
         try {
             const ac = getAudio();
@@ -44,7 +43,6 @@
 
             osc.type = type;
             osc.frequency.setValueAtTime(freq, now);
-
             g.gain.setValueAtTime(gainVal, now);
             g.gain.linearRampToValueAtTime(0.001, now + duration);
 
@@ -53,6 +51,55 @@
 
             osc.start(now);
             osc.stop(now + duration);
+        } catch (e) {}
+    }
+
+    // ⚡ 雷鳴サウンドエフェクト
+    function playThunderSound() {
+        try {
+            const ac = getAudio();
+            const now = ac.currentTime;
+
+            const bufferSize = Math.floor(ac.sampleRate * 0.8);
+            const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = ac.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = ac.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1200, now);
+            filter.frequency.exponentialRampToValueAtTime(60, now + 0.7);
+
+            const noiseGain = ac.createGain();
+            noiseGain.gain.setValueAtTime(0.9, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.75);
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(ac.destination);
+
+            noise.start(now);
+            noise.stop(now + 0.8);
+
+            const osc = ac.createOscillator();
+            const oscGain = ac.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.6);
+
+            oscGain.gain.setValueAtTime(0.6, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+            osc.connect(oscGain);
+            oscGain.connect(ac.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.6);
         } catch (e) {}
     }
 
@@ -80,18 +127,26 @@
         } catch (e) {}
     }
 
-    // 🎵 回転中 BGMシーケンサー（レトロ和風メロディループ）
+    // 🎵 回転中 BGMシーケンサー
     let bgmTimer = null;
     let bgmIndex = 0;
-    const bgmNotes = [
+
+    const normalNotes = [
         293.66, 349.23, 392.00, 440.00, 523.25, 587.33, 523.25, 440.00,
         392.00, 440.00, 523.25, 587.33, 698.46, 587.33, 523.25, 440.00
     ];
 
-    function startSpinBGM() {
+    const arashiNotes = [
+        659.25, 783.99, 880.00, 987.77, 1174.66, 1318.51, 1174.66, 987.77,
+        880.00, 987.77, 1174.66, 1318.51, 1567.98, 1318.51, 1174.66, 987.77
+    ];
+
+    function startSpinBGM(isArashi) {
         stopSpinBGM();
         bgmIndex = 0;
-        const noteDuration = 0.12;
+
+        const currentNotes = isArashi ? arashiNotes : normalNotes;
+        const noteDuration = isArashi ? 0.10 : 0.13;
 
         bgmTimer = setInterval(() => {
             if (!state.reels.some(r => r.spinning)) {
@@ -100,16 +155,16 @@
             }
             try {
                 const ac = getAudio();
-                const freq = bgmNotes[bgmIndex % bgmNotes.length];
+                const freq = currentNotes[bgmIndex % currentNotes.length];
                 const now = ac.currentTime;
 
                 const osc = ac.createOscillator();
                 const g = ac.createGain();
 
-                osc.type = 'square'; // 8bitゲーム調の矩形波
+                osc.type = isArashi ? 'sawtooth' : 'square';
                 osc.frequency.setValueAtTime(freq, now);
 
-                g.gain.setValueAtTime(0.08, now); // 耳障りにならない適度な音量
+                g.gain.setValueAtTime(isArashi ? 0.10 : 0.08, now);
                 g.gain.linearRampToValueAtTime(0.001, now + noteDuration);
 
                 osc.connect(g);
@@ -134,12 +189,12 @@
     // 🎰 図柄＆配当設定
     // ==========================================================================
     const SYMBOLS = {
-        SEVEN:   { id: 0, name: '7',     color: '#ff2a2a', pay: 100 }, // 大当たり 100枚
-        CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 48 },   // 48枚
-        BEER:    { id: 2, name: '生ビール', icon: '🍺', pay: 24 },   // 24枚
-        CHICKEN: { id: 3, name: '地鶏',   icon: '🍗', pay: 18 },   // 18枚
-        BELL:    { id: 4, name: 'ベル',   icon: '🔔', pay: 6 },    // 6枚
-        REPLAY:  { id: 5, name: 'リプレイ', icon: '🔄', pay: 0 }     // 再遊技
+        SEVEN:   { id: 0, name: '7',     color: '#ff2a2a', pay: 100 },
+        CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 48 },
+        BEER:    { id: 2, name: '生ビール', icon: '🍺', pay: 24 },
+        CHICKEN: { id: 3, name: '地鶏',   icon: '🍗', pay: 18 },
+        BELL:    { id: 4, name: 'ベル',   icon: '🔔', pay: 6 },
+        REPLAY:  { id: 5, name: 'リプレイ', icon: '🔄', pay: 0 }
     };
 
     const REEL_STRIP = [
@@ -187,24 +242,29 @@
         state.win = 0;
         state.winLines = [];
         state.status = 'SPINNING';
-        playTone(300, 'sawtooth', 0.12, 0.3); // レバーオンSE
+        playTone(300, 'sawtooth', 0.12, 0.3);
 
-        // 内部抽選 (5%で7告知)
+        // 内部抽選 (8%で7大当たり＆嵐ランプ点灯)
         const rand = Math.random() * 100;
-        if (rand < 5) {
+        if (rand < 8) {
             state.flashLamp = true;
-            playTone(110, 'sawtooth', 0.18, 0.6); // 告知「ガコッ！」音
-            state.message = '⚡ 嵐ランプ点灯！7を狙え！ ⚡';
+            playThunderSound();
+            state.message = '⚡ 嵐点灯！低速回転中！7を狙え！ ⚡';
+        } else {
+            state.message = 'ボタンを押してリールを止めよう！';
         }
+
+        // 🎯 回転速度の調整：通常時は0.30、嵐ランプ点灯時は0.16（目押し超低速）
+        const currentSpeed = state.flashLamp ? 0.16 : 0.30;
 
         state.reels.forEach((r, idx) => {
             r.spinning = true;
             r.stopped = false;
-            r.speed = 0.45;
+            r.speed = currentSpeed;
             state.btnStops[idx].active = true;
         });
 
-        startSpinBGM();
+        startSpinBGM(state.flashLamp);
     }
 
     function stopReel(index) {
@@ -212,12 +272,26 @@
         if (!r.spinning || r.stopped) return;
 
         unlockAudio();
-        playTone(180, 'square', 0.08, 0.35); // 停止SE（バシッ！）
+        playTone(180, 'square', 0.08, 0.35);
         r.spinning = false;
         r.stopped = true;
         state.btnStops[index].active = false;
         
-        r.pos = Math.round(r.pos) % REEL_STRIP.length;
+        let stopPos = Math.round(r.pos) % REEL_STRIP.length;
+
+        // 🧲 嵐ランプ点灯時：最大4コマの「7」引き込みアシスト
+        if (state.flashLamp) {
+            for (let slip = 0; slip <= 4; slip++) {
+                const checkPos = (stopPos + slip) % REEL_STRIP.length;
+                // 中段が7になる位置（checkPos）または上段・下段が7になる位置を引き込み
+                if (REEL_STRIP[checkPos].id === SYMBOLS.SEVEN.id) {
+                    stopPos = checkPos;
+                    break;
+                }
+            }
+        }
+
+        r.pos = stopPos;
 
         if (state.reels.every(reel => reel.stopped)) {
             stopSpinBGM();
@@ -300,10 +374,10 @@
         ctx.strokeRect(15, 15, 330, 70);
 
         if (state.flashLamp) {
-            state.lampGlow = (state.lampGlow + 0.15) % Math.PI;
-            ctx.fillStyle = `rgba(255, 20, 100, ${0.7 + Math.sin(state.lampGlow) * 0.3})`;
+            state.lampGlow = (state.lampGlow + 0.18) % Math.PI;
+            ctx.fillStyle = `rgba(255, 20, 100, ${0.75 + Math.sin(state.lampGlow) * 0.25})`;
             ctx.shadowColor = '#ff0055';
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = 22;
         } else {
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#443333';
@@ -415,7 +489,7 @@
         // メッセージバー
         ctx.fillStyle = '#111';
         ctx.fillRect(25, 283, 310, 22);
-        ctx.fillStyle = '#00ffcc';
+        ctx.fillStyle = state.flashLamp ? '#ff3366' : '#00ffcc';
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(state.message, 180, 298);
