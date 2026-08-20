@@ -1,7 +1,8 @@
 /**
- * 🎰 パチスロ 琴嵐（専用スクリプト）
+ * 🎰 パチスロ 琴嵐（音声修正＆BGM搭載版）
+ * ・ブラウザ自動再生制限対応（AudioContext アンロック機構）
+ * ・回転中8bit和風BGM ＆ 各種効果音（レバー・停止・告知・ファンファーレ）
  * ・上から下へのスムーズなリール回転
- * ・回転中BGM（パチスロ風8bitメロディループ）搭載
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -10,27 +11,48 @@
     const ctx = canvas.getContext('2d');
 
     // ==========================================================================
-    // 🔊 サウンド ＆ BGMエンジン（Web Audio API）
+    // 🔊 サウンド ＆ BGMエンジン（Web Audio API 強力アンロック版）
     // ==========================================================================
     let audioCtx = null;
+
     function getAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!audioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContextClass();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
         return audioCtx;
     }
 
-    // 単音SE
-    function playTone(freq, type, duration, gainVal = 0.2) {
+    // ユーザー操作時の音声強制アンロック
+    function unlockAudio() {
+        const ac = getAudio();
+        if (ac.state === 'suspended') {
+            ac.resume();
+        }
+    }
+
+    // 単音SE生成（安全な線形減衰）
+    function playTone(freq, type, duration, gainVal = 0.25) {
         try {
             const ac = getAudio();
             const osc = ac.createOscillator();
             const g = ac.createGain();
+            const now = ac.currentTime;
+
             osc.type = type;
-            osc.frequency.setValueAtTime(freq, ac.currentTime);
-            g.gain.setValueAtTime(gainVal, ac.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + duration);
-            osc.connect(g); g.connect(ac.destination);
-            osc.start(); osc.stop(ac.currentTime + duration);
+            osc.frequency.setValueAtTime(freq, now);
+
+            g.gain.setValueAtTime(gainVal, now);
+            g.gain.linearRampToValueAtTime(0.001, now + duration);
+
+            osc.connect(g);
+            g.connect(ac.destination);
+
+            osc.start(now);
+            osc.stop(now + duration);
         } catch (e) {}
     }
 
@@ -40,23 +62,27 @@
             const ac = getAudio();
             const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
             notes.forEach((freq, i) => {
+                const now = ac.currentTime + (i * 0.12);
                 const osc = ac.createOscillator();
                 const g = ac.createGain();
+
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(freq, ac.currentTime + (i * 0.1));
-                g.gain.setValueAtTime(0.3, ac.currentTime + (i * 0.1));
-                g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + (i * 0.1) + 0.35);
-                osc.connect(g); g.connect(ac.destination);
-                osc.start(ac.currentTime + (i * 0.1));
-                osc.stop(ac.currentTime + (i * 0.1) + 0.35);
+                osc.frequency.setValueAtTime(freq, now);
+                g.gain.setValueAtTime(0.35, now);
+                g.gain.linearRampToValueAtTime(0.001, now + 0.35);
+
+                osc.connect(g);
+                g.connect(ac.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.35);
             });
         } catch (e) {}
     }
 
-    // 🎵 リール回転中 BGMシーケンサー（和風レトロパチスロ調）
+    // 🎵 回転中 BGMシーケンサー（レトロ和風メロディループ）
     let bgmTimer = null;
-    let bgmNoteIndex = 0;
-    // メロディ周波数配列 (Dマイナーペンタトニック: D4, F4, G4, A4, C5, D5...)
+    let bgmIndex = 0;
     const bgmNotes = [
         293.66, 349.23, 392.00, 440.00, 523.25, 587.33, 523.25, 440.00,
         392.00, 440.00, 523.25, 587.33, 698.46, 587.33, 523.25, 440.00
@@ -64,9 +90,8 @@
 
     function startSpinBGM() {
         stopSpinBGM();
-        bgmNoteIndex = 0;
-        const ac = getAudio();
-        const noteDuration = 0.11; // テンポ
+        bgmIndex = 0;
+        const noteDuration = 0.12;
 
         bgmTimer = setInterval(() => {
             if (!state.reels.some(r => r.spinning)) {
@@ -74,16 +99,26 @@
                 return;
             }
             try {
-                const freq = bgmNotes[bgmNoteIndex % bgmNotes.length];
+                const ac = getAudio();
+                const freq = bgmNotes[bgmIndex % bgmNotes.length];
+                const now = ac.currentTime;
+
                 const osc = ac.createOscillator();
                 const g = ac.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(freq, ac.currentTime);
-                g.gain.setValueAtTime(0.12, ac.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + noteDuration);
-                osc.connect(g); g.connect(ac.destination);
-                osc.start(); osc.stop(ac.currentTime + noteDuration);
-                bgmNoteIndex++;
+
+                osc.type = 'square'; // 8bitゲーム調の矩形波
+                osc.frequency.setValueAtTime(freq, now);
+
+                g.gain.setValueAtTime(0.08, now); // 耳障りにならない適度な音量
+                g.gain.linearRampToValueAtTime(0.001, now + noteDuration);
+
+                osc.connect(g);
+                g.connect(ac.destination);
+
+                osc.start(now);
+                osc.stop(now + noteDuration);
+
+                bgmIndex++;
             } catch (e) {}
         }, noteDuration * 1000);
     }
@@ -136,7 +171,7 @@
 
     function startSpin() {
         if (state.status !== 'IDLE') return;
-        getAudio();
+        unlockAudio();
 
         if (!state.isReplay) {
             if (state.credit < state.bet) {
@@ -152,13 +187,13 @@
         state.win = 0;
         state.winLines = [];
         state.status = 'SPINNING';
-        playTone(300, 'sawtooth', 0.12, 0.3);
+        playTone(300, 'sawtooth', 0.12, 0.3); // レバーオンSE
 
-        // 内部抽選 (5%で7当たり告知)
+        // 内部抽選 (5%で7告知)
         const rand = Math.random() * 100;
         if (rand < 5) {
             state.flashLamp = true;
-            playTone(120, 'sawtooth', 0.15, 0.5); // ガコッ！告知音
+            playTone(110, 'sawtooth', 0.18, 0.6); // 告知「ガコッ！」音
             state.message = '⚡ 嵐ランプ点灯！7を狙え！ ⚡';
         }
 
@@ -169,7 +204,6 @@
             state.btnStops[idx].active = true;
         });
 
-        // 🎵 BGMスタート
         startSpinBGM();
     }
 
@@ -177,7 +211,8 @@
         const r = state.reels[index];
         if (!r.spinning || r.stopped) return;
 
-        playTone(180, 'square', 0.08, 0.3);
+        unlockAudio();
+        playTone(180, 'square', 0.08, 0.35); // 停止SE（バシッ！）
         r.spinning = false;
         r.stopped = true;
         state.btnStops[index].active = false;
@@ -185,7 +220,7 @@
         r.pos = Math.round(r.pos) % REEL_STRIP.length;
 
         if (state.reels.every(reel => reel.stopped)) {
-            stopSpinBGM(); // 🎵 全リール停止でBGM停止
+            stopSpinBGM();
             checkResult();
         }
     }
@@ -232,10 +267,10 @@
                 playFanfare();
             } else if (isRep) {
                 state.message = '🔄 REPLAY！もう1回無料！';
-                playTone(987, 'sine', 0.1, 0.2);
+                playTone(880, 'sine', 0.12, 0.25);
             } else {
                 state.message = `✨ ${payout}枚 払い出し！ ごっつあんです！`;
-                playTone(987, 'sine', 0.1, 0.2);
+                playTone(880, 'sine', 0.12, 0.25);
             }
         } else {
             state.message = 'ハズレ… 次回に期待！';
@@ -437,6 +472,7 @@
     }
 
     function handleInput(p) {
+        unlockAudio();
         if (p.x >= state.btnStart.x && p.x <= state.btnStart.x + state.btnStart.w &&
             p.y >= state.btnStart.y && p.y <= state.btnStart.y + state.btnStart.h) {
             startSpin();
@@ -457,6 +493,7 @@
 
     window.addEventListener('keydown', (e) => {
         if (canvas.style.display === 'none') return;
+        unlockAudio();
         if (e.code === 'Space') { e.preventDefault(); startSpin(); }
         else if (e.code === 'KeyZ' || e.code === 'Digit1') stopReel(0);
         else if (e.code === 'KeyX' || e.code === 'Digit2') stopReel(1);
