@@ -1,6 +1,6 @@
 /**
- * 🎰 パチスロ 琴嵐（「7」ワイド拡大 ＆ パチスロ特太フォント仕様版）
- * ・「7」図柄を横幅1.4倍にワイド拡大 ＆ ゴールド縁取り立体フォント
+ * 🎰 パチスロ 琴嵐（「7」超ワイド拡大 ＆ ド迫力パチスロフォント仕様版）
+ * ・「7」図柄をリール枠いっぱいに横幅1.9倍へ超拡大 ＆ ゴールド・ブラック二重縁取り
  * ・目押し低速リール回転 ＆ 意地悪1マススベリ
  * ・嵐ランプ当選まで継続 ＆ 1/100左フリーズ ＆ 紙吹雪 ＆ 1000枚オーロラ祝賀
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
@@ -369,13 +369,11 @@
 
         let stopPos = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
 
-        // 意地悪1マススベリ
         if (!state.isBonusMode && Math.random() < 0.35) {
             stopPos = (stopPos + 1) % REEL_STRIP.length;
             playTone(120, 'sawtooth', 0.06, 0.2);
         }
 
-        // ボーナス中引き込みアシスト
         if (state.isBonusMode) {
             for (let slip = 0; slip <= 4; slip++) {
                 const checkPos = (stopPos + slip) % REEL_STRIP.length;
@@ -583,25 +581,30 @@
                 ctx.lineWidth = 1;
                 ctx.strokeRect(rx, sy, reelW, rowH);
 
-                // 🎰 「7」を横幅1.4倍にワイド拡大＆金縁取り立体フォントで描画
+                // 🎰 「7」をリール幅目一杯（約1.9倍）に超ワイド拡大！
                 if (sym.id === SYMBOLS.SEVEN.id) {
                     ctx.save();
                     const cx = rx + reelW / 2;
                     const cy = sy + rowH / 2;
                     ctx.translate(cx, cy);
-                    ctx.scale(1.4, 1.05); // 横幅を1.4倍にワイド拡大！
+                    ctx.scale(1.9, 1.05); // 横幅を1.9倍に超拡大！
 
-                    // パチスロ調の極太フォント
-                    ctx.font = '900 42px "Impact", "Arial Black", "Trebuchet MS", sans-serif';
+                    // パチスロ特太フォント
+                    ctx.font = '900 44px "Impact", "Arial Black", "Trebuchet MS", sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
 
-                    // ゴールドの太い縁取り
-                    ctx.strokeStyle = '#d4af37';
-                    ctx.lineWidth = 4;
+                    // 外側の黒縁取り
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 6;
                     ctx.strokeText('7', 0, 0);
 
-                    // 内側の鮮烈なレッド
+                    // ゴールドの太い縁取り
+                    ctx.strokeStyle = '#ffd700';
+                    ctx.lineWidth = 3.5;
+                    ctx.strokeText('7', 0, 0);
+
+                    // 鮮烈な赤
                     ctx.fillStyle = '#ff1122';
                     ctx.fillText('7', 0, 0);
 
