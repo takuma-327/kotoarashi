@@ -1,9 +1,9 @@
 /**
- * 🎰 パチスロ 琴嵐（オーロラ祝賀 ＆ 嵐ランプ継続 ＆ 左フリーズ搭載版）
- * ・嵐ランプは777が当たるまでずっと点灯継続（ボーナス確定モード）⚡
- * ・1/100で左リール停止ボタンを押しても1秒間止まらないフリーズ演出！
- * ・クレジット1000枚突破で全体がオーロラに発光 ＆ 特大祝賀メッセージ表示✨
- * ・紙吹雪演出 ＆ 嵐専用激アツBGM ＆ 上から下へのスムーズ回転
+ * 🎰 パチスロ 琴嵐（目押し低速化 ＆ 意地悪1マススベリ ＆ 確率調整版）
+ * ・人間が目で見て図柄を狙える低速リール回転
+ * ・ストップ時に約35%で発動する「ズルッ…！1マス強制スベリ」機能
+ * ・当選確率をリアルなパチスロ仕様（約3.5%）に引き下げ
+ * ・オーロラ祝賀 ＆ 嵐ランプ継続 ＆ 左フリーズ ＆ 紙吹雪演出
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -144,7 +144,7 @@
         bgmIndex = 0;
 
         const currentNotes = isArashi ? arashiNotes : normalNotes;
-        const noteDuration = isArashi ? 0.10 : 0.13;
+        const noteDuration = isArashi ? 0.11 : 0.14;
 
         bgmTimer = setInterval(() => {
             if (!state.reels.some(r => r.spinning)) {
@@ -258,13 +258,13 @@
         return sym;
     }
 
-    let auroraHue = 0; // オーロラ色相カウンター
+    let auroraHue = 0;
 
     const state = {
         credit: 50, bet: 3, win: 0, isReplay: false,
         status: 'IDLE', flashLamp: false, lampGlow: 0,
-        isBonusMode: false, // ⚡ 777当たるまで継続するボーナスモード
-        isLeftFreezing: false, // 左フリーズ中フラグ
+        isBonusMode: false,
+        isLeftFreezing: false,
         isCenterReverse: false,
         isBigWon: false,
         message: 'STARTボタンでレバーオン！',
@@ -306,15 +306,15 @@
         state.status = 'SPINNING';
         playTone(300, 'sawtooth', 0.12, 0.3);
 
-        // 内部抽選 (8%で嵐ランプ点灯＆ボーナスモード突入)
+        // 内部抽選（確率を約3.5%に調整）
         const rand = Math.random() * 100;
-        if (rand < 8 || state.isBonusMode) {
-            state.isBonusMode = true; // 777当たるまで継続！
+        if (rand < 3.5 || state.isBonusMode) {
+            state.isBonusMode = true;
             state.flashLamp = true;
             playThunderSound();
             state.message = '⚡ 嵐点灯中！777当たるまで継続！狙え！ ⚡';
         } else {
-            state.message = 'ボタンを押してリールを止めよう！';
+            state.message = '図柄を目で見てストップボタンを押そう！';
         }
 
         // 1/100 中リール逆回転
@@ -323,7 +323,8 @@
             state.message = '⚡【怪奇演出】中リール逆回転中！？⚡';
         }
 
-        const baseSpeed = state.isBonusMode ? 0.16 : 0.30;
+        // 🎯 目押しがしっかりできる低速回転（通常0.18 / 嵐0.12）
+        const baseSpeed = state.isBonusMode ? 0.12 : 0.18;
 
         state.reels.forEach((r, idx) => {
             r.spinning = true;
@@ -345,7 +346,7 @@
 
         unlockAudio();
 
-        // 🌀 1/100の確率で左リール（STOP 1）が1秒間止まらないフリーズ演出
+        // 1/100 左リールフリーズ遅延
         if (index === 0 && !state.isLeftFreezing && Math.random() < 0.01) {
             state.isLeftFreezing = true;
             state.btnStops[0].active = false;
@@ -355,7 +356,7 @@
             setTimeout(() => {
                 state.isLeftFreezing = false;
                 executeStopReel(0);
-            }, 1000); // 1秒遅延して停止
+            }, 1000);
             return;
         }
 
@@ -373,7 +374,14 @@
 
         let stopPos = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
 
-        // ボーナスモード中：最大4コマの引き込みアシスト
+        // 😈 意地悪な「1マス強制スベリ（目押し外し）」機能
+        // 通常時（ボーナス非点灯時）に約35%の確率で発動し、1コマ余分にスベる
+        if (!state.isBonusMode && Math.random() < 0.35) {
+            stopPos = (stopPos + 1) % REEL_STRIP.length;
+            playTone(120, 'sawtooth', 0.06, 0.2); // スベリ効果音
+        }
+
+        // ボーナスモード中：最大4コマの7引き込みアシスト
         if (state.isBonusMode) {
             for (let slip = 0; slip <= 4; slip++) {
                 const checkPos = (stopPos + slip) % REEL_STRIP.length;
@@ -438,7 +446,7 @@
 
             if (isBig) {
                 state.isBigWon = true;
-                state.isBonusMode = false; // ⚡ 777当選でボーナスモード終了
+                state.isBonusMode = false;
                 state.flashLamp = false;
                 spawnConfetti();
                 playFanfare();
@@ -480,7 +488,6 @@
         auroraHue = (auroraHue + 1.5) % 360;
         const isOver1000 = state.credit >= 1000;
 
-        // 1. ベース背景（1000枚以上時はオーロラ調の神秘的なグラデーション）
         if (isOver1000) {
             const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
             bgGrad.addColorStop(0, `hsl(${auroraHue}, 60%, 15%)`);
@@ -492,7 +499,6 @@
         }
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. 枠線（1000枚以上時はオーロラ色に輝く）
         if (isOver1000) {
             ctx.strokeStyle = `hsl(${auroraHue}, 100%, 65%)`;
             ctx.shadowColor = `hsl(${auroraHue}, 100%, 75%)`;
@@ -506,14 +512,12 @@
         ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
         ctx.shadowBlur = 0;
 
-        // 3. 上部エリア
         ctx.fillStyle = isOver1000 ? 'rgba(30, 20, 35, 0.85)' : '#2c221e';
         ctx.fillRect(15, 15, 330, 70);
         ctx.strokeStyle = isOver1000 ? `hsl(${(auroraHue + 40) % 360}, 90%, 60%)` : '#8c7025';
         ctx.lineWidth = 2;
         ctx.strokeRect(15, 15, 330, 70);
 
-        // 嵐ランプ（ボーナスモード中は常時点灯）
         if (state.isBonusMode || state.flashLamp) {
             state.lampGlow = (state.lampGlow + 0.18) % Math.PI;
             ctx.fillStyle = `rgba(255, 20, 100, ${0.75 + Math.sin(state.lampGlow) * 0.25})`;
@@ -530,13 +534,11 @@
         ctx.fillText('CHANCE', 28, 62);
         ctx.shadowBlur = 0;
 
-        // タイトル
         ctx.fillStyle = isOver1000 ? '#ffd700' : '#f4a261';
         ctx.font = 'bold 17px "Noto Serif JP", serif';
         ctx.textAlign = 'center';
         ctx.fillText('パチスロ 琴嵐', 180, 42);
 
-        // メーター表示
         ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(230, 23, 105, 54);
         ctx.fillStyle = isOver1000 ? '#ffd700' : '#00ffcc';
@@ -548,7 +550,6 @@
         ctx.fillStyle = '#ff3366';
         ctx.fillText(`WIN:   ${state.win}`, 236, 68);
 
-        // 4. リール窓
         const reelY = 100;
         const rowH = 60;
         const reelW = 80;
@@ -614,7 +615,6 @@
             ctx.restore();
         });
 
-        // 当たりライン描画
         if (state.winLines.length > 0) {
             ctx.strokeStyle = '#ffff00';
             ctx.lineWidth = 4;
@@ -631,10 +631,8 @@
             });
         }
 
-        // 紙吹雪描画
         updateAndDrawConfetti();
 
-        // 5. 特大祝賀バナー（クレジット1000枚以上時）
         if (isOver1000) {
             ctx.save();
             const bannerGrad = ctx.createLinearGradient(20, 275, 340, 275);
@@ -657,7 +655,6 @@
             ctx.fillText('✨ おめでとう！今月も琴嵐よろしく！！ ✨', 180, 294);
             ctx.restore();
         } else {
-            // 通常メッセージバー
             ctx.fillStyle = '#111';
             ctx.fillRect(25, 283, 310, 22);
 
@@ -674,7 +671,6 @@
             ctx.fillText(state.message, 180, 298);
         }
 
-        // 6. スタートボタン
         const canStart = state.status === 'IDLE';
         ctx.fillStyle = canStart ? (isOver1000 ? `hsl(${auroraHue}, 80%, 55%)` : '#f4a261') : '#555';
         ctx.beginPath();
@@ -692,7 +688,6 @@
 
         ctx.fillText(btnLabel, 180, state.btnStart.y + 28);
 
-        // 7. ストップボタン
         state.btnStops.forEach((b, idx) => {
             ctx.fillStyle = b.active ? '#9e2a2b' : '#333';
             ctx.beginPath();
@@ -705,7 +700,6 @@
             ctx.fillText(`STOP ${idx + 1}`, b.x + b.w / 2, b.y + 33);
         });
 
-        // 8. 配当表フッター
         ctx.fillStyle = isOver1000 ? '#fcfaf2' : '#aaa';
         ctx.font = '10px sans-serif';
         ctx.fillText('配当: 7(100枚) / ちゃんこ(48枚) / ビール(24枚)', 180, 455);
