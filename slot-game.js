@@ -1,9 +1,8 @@
 /**
- * 🎰 パチスロ 琴嵐（目押し低速化 ＆ 意地悪1マススベリ ＆ 確率調整版）
- * ・人間が目で見て図柄を狙える低速リール回転
- * ・ストップ時に約35%で発動する「ズルッ…！1マス強制スベリ」機能
- * ・当選確率をリアルなパチスロ仕様（約3.5%）に引き下げ
- * ・オーロラ祝賀 ＆ 嵐ランプ継続 ＆ 左フリーズ ＆ 紙吹雪演出
+ * 🎰 パチスロ 琴嵐（「7」ワイド拡大 ＆ パチスロ特太フォント仕様版）
+ * ・「7」図柄を横幅1.4倍にワイド拡大 ＆ ゴールド縁取り立体フォント
+ * ・目押し低速リール回転 ＆ 意地悪1マススベリ
+ * ・嵐ランプ当選まで継続 ＆ 1/100左フリーズ ＆ 紙吹雪 ＆ 1000枚オーロラ祝賀
  * ・指定配当（7:100 / ちゃんこ:48 / ビール:24 / 地鶏:18 / ベル:6）
  */
 (function () {
@@ -232,7 +231,7 @@
     // 🎰 図柄＆配当設定
     // ==========================================================================
     const SYMBOLS = {
-        SEVEN:   { id: 0, name: '7',     color: '#ff2a2a', pay: 100 },
+        SEVEN:   { id: 0, name: '7',     color: '#ff1122', pay: 100 },
         CHANKO:  { id: 1, name: 'ちゃんこ', icon: '🍲', pay: 48 },
         BEER:    { id: 2, name: '生ビール', icon: '🍺', pay: 24 },
         CHICKEN: { id: 3, name: '地鶏',   icon: '🍗', pay: 18 },
@@ -306,7 +305,6 @@
         state.status = 'SPINNING';
         playTone(300, 'sawtooth', 0.12, 0.3);
 
-        // 内部抽選（確率を約3.5%に調整）
         const rand = Math.random() * 100;
         if (rand < 3.5 || state.isBonusMode) {
             state.isBonusMode = true;
@@ -317,13 +315,11 @@
             state.message = '図柄を目で見てストップボタンを押そう！';
         }
 
-        // 1/100 中リール逆回転
         state.isCenterReverse = (Math.random() < 0.01);
         if (state.isCenterReverse) {
             state.message = '⚡【怪奇演出】中リール逆回転中！？⚡';
         }
 
-        // 🎯 目押しがしっかりできる低速回転（通常0.18 / 嵐0.12）
         const baseSpeed = state.isBonusMode ? 0.12 : 0.18;
 
         state.reels.forEach((r, idx) => {
@@ -346,7 +342,6 @@
 
         unlockAudio();
 
-        // 1/100 左リールフリーズ遅延
         if (index === 0 && !state.isLeftFreezing && Math.random() < 0.01) {
             state.isLeftFreezing = true;
             state.btnStops[0].active = false;
@@ -374,14 +369,13 @@
 
         let stopPos = (Math.round(r.pos) % REEL_STRIP.length + REEL_STRIP.length) % REEL_STRIP.length;
 
-        // 😈 意地悪な「1マス強制スベリ（目押し外し）」機能
-        // 通常時（ボーナス非点灯時）に約35%の確率で発動し、1コマ余分にスベる
+        // 意地悪1マススベリ
         if (!state.isBonusMode && Math.random() < 0.35) {
             stopPos = (stopPos + 1) % REEL_STRIP.length;
-            playTone(120, 'sawtooth', 0.06, 0.2); // スベリ効果音
+            playTone(120, 'sawtooth', 0.06, 0.2);
         }
 
-        // ボーナスモード中：最大4コマの7引き込みアシスト
+        // ボーナス中引き込みアシスト
         if (state.isBonusMode) {
             for (let slip = 0; slip <= 4; slip++) {
                 const checkPos = (stopPos + slip) % REEL_STRIP.length;
@@ -589,14 +583,33 @@
                 ctx.lineWidth = 1;
                 ctx.strokeRect(rx, sy, reelW, rowH);
 
+                // 🎰 「7」を横幅1.4倍にワイド拡大＆金縁取り立体フォントで描画
                 if (sym.id === SYMBOLS.SEVEN.id) {
-                    ctx.fillStyle = sym.color;
-                    ctx.font = 'bold 36px sans-serif';
+                    ctx.save();
+                    const cx = rx + reelW / 2;
+                    const cy = sy + rowH / 2;
+                    ctx.translate(cx, cy);
+                    ctx.scale(1.4, 1.05); // 横幅を1.4倍にワイド拡大！
+
+                    // パチスロ調の極太フォント
+                    ctx.font = '900 42px "Impact", "Arial Black", "Trebuchet MS", sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText('7', rx + reelW / 2, sy + 44);
+                    ctx.textBaseline = 'middle';
+
+                    // ゴールドの太い縁取り
+                    ctx.strokeStyle = '#d4af37';
+                    ctx.lineWidth = 4;
+                    ctx.strokeText('7', 0, 0);
+
+                    // 内側の鮮烈なレッド
+                    ctx.fillStyle = '#ff1122';
+                    ctx.fillText('7', 0, 0);
+
+                    ctx.restore();
                 } else {
                     ctx.font = '28px sans-serif';
                     ctx.textAlign = 'center';
+                    ctx.textBaseline = 'alphabetic';
                     ctx.fillText(sym.icon, rx + reelW / 2, sy + 38);
                     ctx.fillStyle = '#333';
                     ctx.font = 'bold 10px sans-serif';
