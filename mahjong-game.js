@@ -1,10 +1,9 @@
 /**
- * 🀄 琴嵐 ランダム配牌＆超絶ツモアシスト麻雀（専用スクリプト）
- * ・配牌は毎回ランダム（自分で手牌を育てる面白さ！）
- * ・不要な牌に「捨」ナビゲーション表示（初心者でも迷わない）
- * ・打牌するたびに有効牌が自動的に引き寄せられる接待ツモエンジン
- * ・テンパイ（あと1枚）になったら100%当たり牌をツモって役満・高得点和了！
- * ・アガリ時の紙吹雪演出 ＆ ファンファーレ
+ * 🀄 琴嵐 1対1 対戦麻雀（専用スクリプト）
+ * ・画面上部の大将（COM）とリアルタイム1局勝負！
+ * ・大将の捨て牌から「ロン和了！」＆ 自分のツモで「ツモ和了！」
+ * ・プレイヤーがテンパイすると大将が当たり牌を振り込む接待AI搭載
+ * ・打牌ナビゲーション（捨▼）＆ 点数移動 ＆ 紙吹雪ファンファーレ
  */
 (function () {
     const canvas = document.getElementById('mahjongCanvas');
@@ -76,7 +75,7 @@
     function spawnConfetti() {
         confetti = [];
         const colors = ['#ffd700', '#ff3366', '#00ffcc', '#ffffff', '#f4a261', '#ff0055'];
-        for (let i = 0; i < 70; i++) {
+        for (let i = 0; i < 75; i++) {
             confetti.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * -canvas.height * 0.8,
@@ -121,7 +120,7 @@
 
         11: { name: '一筒', type: 'p', num: 1, text: '1', sub: '筒', color: '#0066cc' },
         12: { name: '二筒', type: 'p', num: 2, text: '2', sub: '筒', color: '#0066cc' },
-        13: { name: '三筒', type: 'p', num: 3, text: '3', sub: '筒', color: '#0066cc' },
+        13: { name: '三筒', type: 'p', num: 3, text: '三', sub: '筒', color: '#0066cc' },
         14: { name: '四筒', type: 'p', num: 4, text: '4', sub: '筒', color: '#0066cc' },
         15: { name: '五筒', type: 'p', num: 5, text: '5', sub: '筒', color: '#0066cc' },
         16: { name: '六筒', type: 'p', num: 6, text: '6', sub: '筒', color: '#0066cc' },
@@ -150,19 +149,27 @@
 
     const ALL_TILE_IDS = Object.keys(TILE_INFO).map(Number);
 
+    // ==========================================================================
+    // ⚔️ 対戦状態管理
+    // ==========================================================================
     let wall = [];
-    let hand = [];
-    let tsumoTile = null;
-    let discards = [];
-    let doraTile = null;
-    let isReadyToWin = false;
-    let gameState = 'PLAY'; // 'PLAY', 'AGARI', 'RYUKYOKU'
-    let agariResult = null;
-    let score = 25000;
-    let winningTiles = []; // 現在の当たり牌リスト
-    let turnCount = 0;
+    let playerHand = [];
+    let playerTsumo = null;
+    let playerDiscards = [];
+    let playerScore = 25000;
 
-    // 136枚の山牌生成＆シャッフル
+    let comHand = [];
+    let comDiscards = [];
+    let comScore = 25000;
+    let comDialogue = 'いらっしゃい！お手柔らかに頼むで！';
+
+    let doraTile = null;
+    let turn = 'PLAYER'; // 'PLAYER', 'COM', 'RON_CHANCE'
+    let gameState = 'PLAY'; // 'PLAY', 'AGARI', 'RYUKYOKU'
+    let agariData = null; // 和了情報 { type: 'TSUMO'|'RON', winner: 'PLAYER', name, score, yaku }
+    let playerWinningTiles = [];
+    let lastComDiscard = null;
+
     function initWall() {
         wall = [];
         ALL_TILE_IDS.forEach(id => {
@@ -174,74 +181,69 @@
         }
     }
 
-    function sortHand() {
-        hand.sort((a, b) => a - b);
-    }
-
     function startNewGame() {
         unlockAudio();
         confetti = [];
-        discards = [];
-        turnCount = 0;
-        isReadyToWin = false;
-        agariResult = null;
+        playerDiscards = [];
+        comDiscards = [];
+        playerWinningTiles = [];
+        lastComDiscard = null;
+        agariData = null;
         gameState = 'PLAY';
+        turn = 'PLAYER';
 
         initWall();
         doraTile = wall.pop();
 
-        // 🎲 完全ランダムな13枚配牌
-        hand = [];
-        for (let i = 0; i < 13; i++) {
-            hand.push(wall.pop());
-        }
-        sortHand();
+        // プレイヤー配牌
+        playerHand = [];
+        for (let i = 0; i < 13; i++) playerHand.push(wall.pop());
+        playerHand.sort((a, b) => a - b);
 
-        // 第1ツモ
-        drawNextTile();
+        // 大将（COM）配牌
+        comHand = [];
+        for (let i = 0; i < 13; i++) comHand.push(wall.pop());
+        comHand.sort((a, b) => a - b);
+
+        comDialogue = 'さあ、一勝負いこうか！';
+        drawPlayerTile();
     }
 
-    // ==========================================================================
-    // 🧲 接待ツモエンジン（有効牌＆当たり牌を強力に引き寄せる）
-    // ==========================================================================
-    function drawNextTile() {
-        if (wall.length === 0 || discards.length >= 18) {
+    // プレイヤーのツモ（接待引き寄せ機能付き）
+    function drawPlayerTile() {
+        if (wall.length === 0 || playerDiscards.length >= 18) {
             gameState = 'RYUKYOKU';
             return;
         }
 
-        // 1. テンパイ（あと1枚）状態かチェック
-        findWaitingTiles();
+        turn = 'PLAYER';
+        findPlayerWinningTiles();
 
-        if (winningTiles.length > 0) {
-            // テンパイ時は100%当たり牌をツモらせる！
-            tsumoTile = winningTiles[Math.floor(Math.random() * winningTiles.length)];
-            isReadyToWin = true;
-            agariResult = calculateYaku([...hand, tsumoTile]);
-            playTone(900, 'triangle', 0.25, 0.4);
+        // テンパイ時は高確率(40%)で自力ツモ和了
+        if (playerWinningTiles.length > 0 && Math.random() < 0.40) {
+            playerTsumo = playerWinningTiles[Math.floor(Math.random() * playerWinningTiles.length)];
+            playTone(900, 'triangle', 0.2, 0.4);
             return;
         }
 
-        // 2. テンパイ前：手牌のペア・連続牌に繋がりやすい有効牌を75%の確率で引き寄せる
-        if (Math.random() < 0.75) {
-            const usefulTiles = getUsefulTilesForHand();
-            if (usefulTiles.length > 0) {
-                tsumoTile = usefulTiles[Math.floor(Math.random() * usefulTiles.length)];
+        // 有効牌の引き寄せ (65%)
+        if (Math.random() < 0.65) {
+            const useful = getUsefulTiles(playerHand);
+            if (useful.length > 0) {
+                playerTsumo = useful[Math.floor(Math.random() * useful.length)];
                 playTone(480, 'triangle', 0.08, 0.2);
                 return;
             }
         }
 
-        // 3. 通常ツモ
-        tsumoTile = wall.pop();
+        playerTsumo = wall.pop();
         playTone(440, 'triangle', 0.06, 0.15);
     }
 
-    // 手牌と相性の良い牌（同じ牌や隣り合う数牌）をリストアップ
-    function getUsefulTilesForHand() {
+    function getUsefulTiles(handTiles) {
         const useful = new Set();
-        hand.forEach(t => {
-            useful.add(t); // 対子・刻子候補
+        handTiles.forEach(t => {
+            useful.add(t);
             if (t < 30) {
                 const num = t % 10;
                 if (num > 1) useful.add(t - 1);
@@ -251,89 +253,140 @@
         return Array.from(useful);
     }
 
-    // テンパイ待ち牌を探索
-    function findWaitingTiles() {
-        winningTiles = [];
-        if (hand.length !== 13) return;
-
-        ALL_TILE_IDS.forEach(candidate => {
-            const testHand = [...hand, candidate].sort((a, b) => a - b);
-            if (isWinningHand(testHand)) {
-                winningTiles.push(candidate);
-            }
+    function findPlayerWinningTiles() {
+        playerWinningTiles = [];
+        if (playerHand.length !== 13) return;
+        ALL_TILE_IDS.forEach(cand => {
+            const test = [...playerHand, cand].sort((a, b) => a - b);
+            if (isWinningHand(test)) playerWinningTiles.push(cand);
         });
     }
 
-    // どの牌を切るべきか（孤立牌）を自動判定してナビ
-    function getDiscardRecommendation() {
-        if (isReadyToWin) return -999;
-
-        const counts = {};
-        const full = [...hand, tsumoTile].filter(Boolean);
-        full.forEach(t => counts[t] = (counts[t] || 0) + 1);
-
-        // 孤立している字牌（1枚だけの東南西北白發中）を最優先で推奨
-        for (let t of full) {
-            if (t >= 30 && counts[t] === 1) return t;
-        }
-
-        // 孤立している数牌（前後がつながっていない牌）
-        for (let t of full) {
-            if (t < 30 && counts[t] === 1) {
-                const num = t % 10;
-                const hasNeighbor = full.includes(t - 1) || full.includes(t + 1) || full.includes(t - 2) || full.includes(t + 2);
-                if (!hasNeighbor) return t;
-            }
-        }
-
-        // 特に孤立がなければ最初の単騎牌
-        for (let t of full) {
-            if (counts[t] === 1) return t;
-        }
-
-        return full[full.length - 1];
-    }
-
-    function discard(index) {
+    // プレイヤー打牌
+    function playerDiscard(index) {
         unlockAudio();
         playTone(600, 'square', 0.04, 0.3);
 
         let discarded;
         if (index === -1) {
-            discarded = tsumoTile;
-            tsumoTile = null;
+            discarded = playerTsumo;
+            playerTsumo = null;
         } else {
-            discarded = hand.splice(index, 1)[0];
-            if (tsumoTile !== null) {
-                hand.push(tsumoTile);
-                tsumoTile = null;
-                sortHand();
+            discarded = playerHand.splice(index, 1)[0];
+            if (playerTsumo !== null) {
+                playerHand.push(playerTsumo);
+                playerTsumo = null;
+                playerHand.sort((a, b) => a - b);
             }
         }
 
-        discards.push(discarded);
-        turnCount++;
+        playerDiscards.push(discarded);
+        findPlayerWinningTiles();
 
-        setTimeout(() => {
-            drawNextTile();
-        }, 150);
+        // 大将のターンへ移行
+        turn = 'COM';
+        setTimeout(comTurn, 600);
     }
 
-    // 4面子1雀頭 / 七対子 / 国士無双の和了判定
+    // 大将（COM）の思考と打牌
+    function comTurn() {
+        if (gameState !== 'PLAY') return;
+
+        // 大将ツモ
+        const comTsumo = wall.pop();
+        if (!comTsumo || comDiscards.length >= 18) {
+            gameState = 'RYUKYOKU';
+            return;
+        }
+        comHand.push(comTsumo);
+
+        // 🎯 接待ロジック：プレイヤーがテンパイしていれば、70%の確率で当たり牌を振り込む
+        let discardTile;
+        if (playerWinningTiles.length > 0 && Math.random() < 0.70) {
+            discardTile = playerWinningTiles[Math.floor(Math.random() * playerWinningTiles.length)];
+            comDialogue = 'あっ… この牌、危ないか！？';
+        } else {
+            // 通常打牌（ランダムに1枚捨てる）
+            const idx = Math.floor(Math.random() * comHand.length);
+            discardTile = comHand.splice(idx, 1)[0];
+            const phrases = ['ほいっ！', 'どうや？', 'この牌はどうだ？', 'えいっ！', '勝負や！'];
+            comDialogue = phrases[Math.floor(Math.random() * phrases.length)];
+        }
+
+        comDiscards.push(discardTile);
+        lastComDiscard = discardTile;
+        playTone(500, 'square', 0.05, 0.25);
+
+        // プレイヤーの「ロン和了」判定チェック
+        if (playerWinningTiles.includes(discardTile)) {
+            turn = 'RON_CHANCE';
+            playTone(950, 'triangle', 0.3, 0.5); // ロンチャンスSE
+        } else {
+            // 次のプレイヤーターンへ
+            setTimeout(drawPlayerTile, 600);
+        }
+    }
+
+    // 和了実行（ツモ or ロン）
+    function executePlayerWin(isRon) {
+        unlockAudio();
+        const winTile = isRon ? lastComDiscard : playerTsumo;
+        const fullHand = [...playerHand, winTile].sort((a, b) => a - b);
+        const result = calculateYaku(fullHand);
+
+        gameState = 'AGARI';
+        agariData = {
+            type: isRon ? 'RON' : 'TSUMO',
+            winner: 'PLAYER',
+            name: result.name,
+            score: result.score,
+            yaku: result.yaku
+        };
+
+        // 点数移動（大将から全額受け取る）
+        playerScore += result.score;
+        comScore -= result.score;
+        comDialogue = '参った！お見事！ごっつあんです！';
+
+        spawnConfetti();
+        playFanfare();
+    }
+
+    // ロンスルーして自分のツモへ進む
+    function skipRon() {
+        turn = 'PLAYER';
+        drawPlayerTile();
+    }
+
+    // 捨て牌ナビ（孤立牌の推奨）
+    function getPlayerDiscardHint() {
+        if (playerTsumo !== null && playerWinningTiles.includes(playerTsumo)) return -999;
+        const counts = {};
+        const full = [...playerHand, playerTsumo].filter(Boolean);
+        full.forEach(t => counts[t] = (counts[t] || 0) + 1);
+
+        for (let t of full) {
+            if (t >= 30 && counts[t] === 1) return t; // 孤立字牌
+        }
+        for (let t of full) {
+            if (t < 30 && counts[t] === 1) {
+                const hasNeighbor = full.includes(t - 1) || full.includes(t + 1);
+                if (!hasNeighbor) return t;
+            }
+        }
+        return full[0];
+    }
+
+    // 和了・役判定ロジック
     function isWinningHand(tiles) {
         if (tiles.length !== 14) return false;
-
         const counts = {};
         tiles.forEach(t => counts[t] = (counts[t] || 0) + 1);
 
-        // 七対子
-        if (Object.values(counts).filter(c => c === 2).length === 7) return true;
-
-        // 国士無双
+        if (Object.values(counts).filter(c => c === 2).length === 7) return true; // 七対子
         const kokushi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 35, 36, 37];
-        if (kokushi.every(kt => counts[kt] >= 1)) return true;
+        if (kokushi.every(kt => counts[kt] >= 1)) return true; // 国士無双
 
-        // 4面子1雀頭
         const unique = Object.keys(counts).map(Number);
         for (let head of unique) {
             if (counts[head] >= 2) {
@@ -349,20 +402,13 @@
     function canFormMentsu(tiles) {
         if (tiles.length === 0) return true;
         const first = tiles[0];
-
-        // 刻子 (3枚同じ)
         if (tiles.filter(t => t === first).length >= 3) {
             const next = [...tiles];
-            next.splice(next.indexOf(first), 1);
-            next.splice(next.indexOf(first), 1);
-            next.splice(next.indexOf(first), 1);
+            next.splice(next.indexOf(first), 3);
             if (canFormMentsu(next)) return true;
         }
-
-        // 順子 (3枚連続)
         if (first < 30 && (first % 10) <= 7) {
-            const s2 = first + 1;
-            const s3 = first + 2;
+            const s2 = first + 1, s3 = first + 2;
             if (tiles.includes(s2) && tiles.includes(s3)) {
                 const next = [...tiles];
                 next.splice(next.indexOf(first), 1);
@@ -374,46 +420,26 @@
         return false;
     }
 
-    // 役判定＆得点計算
     function calculateYaku(tiles) {
         const counts = {};
         tiles.forEach(t => counts[t] = (counts[t] || 0) + 1);
 
-        // 役満
         const kokushi = [1, 9, 11, 19, 21, 29, 31, 32, 33, 34, 35, 36, 37];
-        if (kokushi.every(kt => counts[kt] >= 1)) {
-            return { name: '国士無双 (役満)', score: 32000, yaku: ['国士無双 (役満)'] };
-        }
-        if (counts[35] >= 3 && counts[36] >= 3 && counts[37] >= 3) {
-            return { name: '大三元 (役満)', score: 32000, yaku: ['大三元 (役満)'] };
-        }
-        if (Object.values(counts).filter(c => c >= 3).length === 4) {
-            return { name: '四暗刻 (役満)', score: 32000, yaku: ['四暗刻 (役満)'] };
-        }
+        if (kokushi.every(kt => counts[kt] >= 1)) return { name: '国士無双 (役満)', score: 32000, yaku: ['国士無双 (役満)'] };
+        if (counts[35] >= 3 && counts[36] >= 3 && counts[37] >= 3) return { name: '大三元 (役満)', score: 32000, yaku: ['大三元 (役満)'] };
+        if (Object.values(counts).filter(c => c >= 3).length === 4) return { name: '四暗刻 (役満)', score: 32000, yaku: ['四暗刻 (役満)'] };
 
-        // 通常役
-        const yakuList = ['門前清自摸和 (1翻)'];
+        const yakuList = ['立直 (1翻)'];
         let han = 1;
-
-        if (tiles.every(t => (t % 10 >= 2 && t % 10 <= 8 && t < 30))) {
-            yakuList.push('断幺九 (1翻)'); han += 1;
-        }
-
+        if (tiles.every(t => (t % 10 >= 2 && t % 10 <= 8 && t < 30))) { yakuList.push('断幺九 (1翻)'); han += 1; }
         const suits = new Set(tiles.filter(t => t < 30).map(t => Math.floor(t / 10)));
         const hasHonors = tiles.some(t => t >= 30);
-        if (suits.size === 1 && !hasHonors) {
-            yakuList.push('清一色 (6翻)'); han += 6;
-        } else if (suits.size === 1 && hasHonors) {
-            yakuList.push('混一色 (3翻)'); han += 3;
-        }
-
+        if (suits.size === 1 && !hasHonors) { yakuList.push('清一色 (6翻)'); han += 6; }
+        else if (suits.size === 1 && hasHonors) { yakuList.push('混一色 (3翻)'); han += 3; }
         if (counts[35] >= 3) { yakuList.push('役牌 白 (1翻)'); han += 1; }
         if (counts[36] >= 3) { yakuList.push('役牌 發 (1翻)'); han += 1; }
         if (counts[37] >= 3) { yakuList.push('役牌 中 (1翻)'); han += 1; }
-        if (counts[31] >= 3) { yakuList.push('自風 東 (1翻)'); han += 1; }
-        if (Object.values(counts).filter(c => c === 2).length === 7) {
-            yakuList.push('七対子 (2翻)'); han += 2;
-        }
+        if (Object.values(counts).filter(c => c === 2).length === 7) { yakuList.push('七対子 (2翻)'); han += 2; }
 
         let pts = 8000;
         let rankName = '満貫 (8000点)';
@@ -422,18 +448,9 @@
         else if (han >= 8) { pts = 16000; rankName = '倍満 (16000点)'; }
         else if (han >= 6) { pts = 12000; rankName = '跳満 (12000点)'; }
         else if (han >= 4) { pts = 8000; rankName = '満貫 (8000点)'; }
-        else if (han === 3) { pts = 4000; rankName = '3翻 4000点'; }
-        else { pts = 2000; rankName = '2翻 2000点'; }
+        else { pts = 4000; rankName = '3翻 4000点'; }
 
         return { name: rankName, score: pts, yaku: yakuList };
-    }
-
-    function executeAgari() {
-        if (!isReadyToWin || !agariResult) return;
-        gameState = 'AGARI';
-        score += agariResult.score;
-        spawnConfetti();
-        playFanfare();
     }
 
     // ==========================================================================
@@ -443,8 +460,8 @@
         const info = TILE_INFO[tileId];
         if (!info) return;
 
-        const w = isLarge ? 22 : 18;
-        const h = isLarge ? 32 : 26;
+        const w = isLarge ? 22 : 16;
+        const h = isLarge ? 32 : 23;
 
         ctx.save();
         if (isGlow) {
@@ -465,16 +482,29 @@
         ctx.textAlign = 'center';
 
         if (info.type === 'z' || isLarge) {
-            ctx.font = `bold ${isLarge ? 13 : 11}px "Noto Serif JP", serif`;
+            ctx.font = `bold ${isLarge ? 13 : 10}px "Noto Serif JP", serif`;
             ctx.fillText(info.text, x + w / 2, y + (info.sub ? h * 0.48 : h * 0.68));
             if (info.sub) {
-                ctx.font = `bold ${isLarge ? 9 : 8}px sans-serif`;
+                ctx.font = `bold ${isLarge ? 9 : 7}px sans-serif`;
                 ctx.fillText(info.sub, x + w / 2, y + h * 0.88);
             }
         } else {
-            ctx.font = `bold ${isLarge ? 11 : 9}px sans-serif`;
-            ctx.fillText(info.num + info.sub, x + w / 2, y + h * 0.65);
+            ctx.font = `bold ${isLarge ? 11 : 8}px sans-serif`;
+            ctx.fillText(info.num + info.sub, x + w / 2, y + h * 0.68);
         }
+    }
+
+    // 牌の裏面描画（COMの手牌用）
+    function drawTileBack(x, y) {
+        ctx.fillStyle = '#f4a261';
+        ctx.beginPath();
+        ctx.roundRect(x, y, 14, 20, 2);
+        ctx.fill();
+        ctx.strokeStyle = '#2c2520';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#e76f51';
+        ctx.fillRect(x + 2, y + 2, 10, 16);
     }
 
     let pulseTime = 0;
@@ -491,56 +521,118 @@
         ctx.lineWidth = 6;
         ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
 
-        // ヘッダー情報バー
+        // 1. トップステータスバー
         ctx.fillStyle = '#0f2b23';
-        ctx.fillRect(10, 10, 340, 52);
+        ctx.fillRect(10, 10, 340, 32);
         ctx.strokeStyle = '#d4af37';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(10, 10, 340, 52);
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(10, 10, 340, 32);
 
         ctx.fillStyle = '#ffd700';
-        ctx.font = 'bold 13px sans-serif';
+        ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(`持ち点: ${score}点`, 20, 30);
+        ctx.fillText(`あなた: ${playerScore}点`, 20, 30);
+        ctx.textAlign = 'right';
+        ctx.fillText(`大将: ${comScore}点`, 335, 30);
 
+        // 2. 大将（COM）エリア (Y: 48 ~ 115)
+        ctx.fillStyle = '#163e32';
+        ctx.fillRect(15, 48, 330, 68);
+        ctx.strokeStyle = '#276753';
+        ctx.strokeRect(15, 48, 330, 68);
+
+        // 大将アイコン ＆ セリフ
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 12px "Noto Serif JP", serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('🥋 大将 (元・琴嵐)', 24, 66);
+
+        // フキダシ
+        ctx.fillStyle = '#0f2b23';
+        ctx.beginPath();
+        ctx.roundRect(140, 52, 195, 20, 4);
+        ctx.fill();
         ctx.fillStyle = '#00ffcc';
-        ctx.font = '11px sans-serif';
-        ctx.fillText(`残ツモ: ${Math.max(0, 18 - discards.length)}回 (ツモ運UP中!)`, 20, 48);
+        ctx.font = '10px sans-serif';
+        ctx.fillText(comDialogue, 146, 66);
 
-        // ドラ表示牌
-        ctx.fillStyle = '#f4a261';
-        ctx.font = 'bold 11px sans-serif';
-        ctx.fillText('ドラ:', 205, 38);
-        if (doraTile) {
-            drawTile(245, 18, doraTile, false);
+        // 大将の伏せ牌（13枚）
+        for (let i = 0; i < 13; i++) {
+            drawTileBack(24 + i * 16, 78);
         }
 
-        // 捨て牌エリア（河）
-        ctx.fillStyle = '#163e32';
-        ctx.fillRect(15, 70, 330, 85);
+        // 3. 河（捨て牌）エリア (Y: 122 ~ 220)
+        ctx.fillStyle = '#123329';
+        ctx.fillRect(15, 122, 330, 100);
         ctx.strokeStyle = '#276753';
-        ctx.strokeRect(15, 70, 330, 85);
+        ctx.strokeRect(15, 122, 330, 100);
 
-        ctx.fillStyle = '#6ab098';
-        ctx.font = '10px sans-serif';
+        // 大将の河 (上2段)
+        ctx.fillStyle = '#88c2a8';
+        ctx.font = '9px sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText('【 捨て牌 】', 22, 84);
-
-        discards.forEach((t, i) => {
+        ctx.fillText('【 大将の河 】', 22, 134);
+        comDiscards.forEach((t, i) => {
             const row = Math.floor(i / 6);
             const col = i % 6;
-            drawTile(25 + col * 24, 92 + row * 28, t, false);
+            drawTile(85 + col * 18, 124 + row * 24, t, false);
         });
 
-        // アクション・メッセージエリア
-        const actionY = 175;
-        if (isReadyToWin && gameState === 'PLAY') {
+        // プレイヤーの河 (下2段)
+        ctx.fillStyle = '#88c2a8';
+        ctx.fillText('【 あなたの河 】', 22, 184);
+        playerDiscards.forEach((t, i) => {
+            const row = Math.floor(i / 6);
+            const col = i % 6;
+            drawTile(85 + col * 18, 174 + row * 24, t, false);
+        });
+
+        // ドラ表示
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText('ドラ:', 245, 168);
+        if (doraTile) drawTile(275, 150, doraTile, false);
+
+        // 4. アクション ＆ メッセージエリア (Y: 230 ~ 285)
+        const actionY = 232;
+
+        if (turn === 'RON_CHANCE' && gameState === 'PLAY') {
+            // ⚡ ロン和了ボタン（点滅）
             ctx.save();
             ctx.shadowColor = '#ffd700';
             ctx.shadowBlur = 18;
             ctx.fillStyle = '#ff2a2a';
             ctx.beginPath();
-            ctx.roundRect(80, actionY, 200, 48, 8);
+            ctx.roundRect(40, actionY, 135, 46, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 18px "Noto Serif JP", serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🀄 ロン和了！', 107, actionY + 30);
+            ctx.restore();
+
+            // スルーボタン
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.roundRect(190, actionY + 6, 120, 36, 6);
+            ctx.fill();
+            ctx.strokeStyle = '#ccc';
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillText('スルー (見送り)', 250, actionY + 29);
+        } else if (playerTsumo !== null && playerWinningTiles.includes(playerTsumo) && gameState === 'PLAY') {
+            // ⚡ ツモ和了ボタン（点滅）
+            ctx.save();
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 18;
+            ctx.fillStyle = '#ff2a2a';
+            ctx.beginPath();
+            ctx.roundRect(80, actionY, 200, 46, 8);
             ctx.fill();
             ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 3;
@@ -549,37 +641,42 @@
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 20px "Noto Serif JP", serif';
             ctx.textAlign = 'center';
-            ctx.fillText('🀄 ツモ和了！！', 180, actionY + 31);
+            ctx.fillText('🀄 ツモ和了！！', 180, actionY + 30);
             ctx.restore();
         } else if (gameState === 'PLAY') {
             ctx.fillStyle = '#ffd700';
-            ctx.font = 'bold 13px sans-serif';
+            ctx.font = 'bold 12px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(winningTiles.length > 0 ? '⚡ テンパイ中！当たり牌をツモるぞ！ ⚡' : '👇「捨」の牌をタップして手牌を育てよう！', 180, actionY + 28);
+            if (turn === 'COM') {
+                ctx.fillText('大将が考え中… 💭', 180, actionY + 28);
+            } else if (playerWinningTiles.length > 0) {
+                ctx.fillText('⚡ テンパイ中！大将の捨て牌をロンかツモで狙え！ ⚡', 180, actionY + 28);
+            } else {
+                ctx.fillText('👇「捨」マークの不要牌を切ってテンパイを目指そう！', 180, actionY + 28);
+            }
         }
 
-        // 手牌エリア
-        const handY = 320;
+        // 5. プレイヤー手牌エリア (Y: 295 ~ 410)
+        const handY = 325;
         ctx.fillStyle = '#0f2b23';
-        ctx.fillRect(10, handY - 28, 340, 98);
+        ctx.fillRect(10, handY - 28, 340, 96);
         ctx.strokeStyle = '#276753';
-        ctx.strokeRect(10, handY - 28, 340, 98);
+        ctx.strokeRect(10, handY - 28, 340, 96);
 
         ctx.fillStyle = '#fcfaf2';
         ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText('【 あなたの手牌 】', 18, handY - 10);
 
-        // 推奨捨牌の取得
-        const recommendedTile = getDiscardRecommendation();
+        const hintTile = getPlayerDiscardHint();
 
-        // 13枚の手牌描画
-        hand.forEach((t, i) => {
+        // 13枚の手牌
+        playerHand.forEach((t, i) => {
             const x = 16 + i * 23;
-            const isDiscardCandidate = (t === recommendedTile && !isReadyToWin);
-            drawTile(x, handY, t, true, isDiscardCandidate);
+            const isHint = (t === hintTile && turn === 'PLAYER' && !playerWinningTiles.includes(playerTsumo));
+            drawTile(x, handY, t, true, isHint);
 
-            if (isDiscardCandidate) {
+            if (isHint) {
                 ctx.fillStyle = '#ff3366';
                 ctx.font = 'bold 10px sans-serif';
                 ctx.textAlign = 'center';
@@ -587,50 +684,49 @@
             }
         });
 
-        // ツモ牌描画（右端）
-        if (tsumoTile !== null) {
+        // プレイヤーのツモ牌（右端）
+        if (playerTsumo !== null) {
             const tsumoX = 16 + 13 * 23 + 6;
-            const isWinningTsumo = isReadyToWin;
-            const isTsumoDiscard = (tsumoTile === recommendedTile && !isReadyToWin);
+            const isWin = playerWinningTiles.includes(playerTsumo);
+            const isHint = (playerTsumo === hintTile && !isWin);
+            drawTile(tsumoX, handY, playerTsumo, true, isWin || isHint);
 
-            drawTile(tsumoX, handY, tsumoTile, true, isWinningTsumo || isTsumoDiscard);
-
-            ctx.fillStyle = isWinningTsumo ? '#ffd700' : '#ff3366';
+            ctx.fillStyle = isWin ? '#ffd700' : (isHint ? '#ff3366' : '#00ffcc');
             ctx.font = 'bold 10px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(isWinningTsumo ? '🎉当り' : (isTsumoDiscard ? '捨▼' : 'ツモ'), tsumoX + 11, handY - 2);
+            ctx.fillText(isWin ? '🎉当り' : (isHint ? '捨▼' : 'ツモ'), tsumoX + 11, handY - 2);
         }
 
         // 紙吹雪描画
         updateAndDrawConfetti();
 
-        // 🎉 和了祝賀画面
-        if (gameState === 'AGARI' && agariResult) {
-            ctx.fillStyle = 'rgba(10, 20, 15, 0.94)';
-            ctx.fillRect(15, 100, 330, 265);
+        // 6. 和了結果モーダル
+        if (gameState === 'AGARI' && agariData) {
+            ctx.fillStyle = 'rgba(10, 20, 15, 0.95)';
+            ctx.fillRect(15, 95, 330, 275);
             ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 4;
-            ctx.strokeRect(15, 100, 330, 265);
+            ctx.strokeRect(15, 95, 330, 275);
 
             ctx.fillStyle = '#ffd700';
             ctx.font = 'bold 22px "Noto Serif JP", serif';
             ctx.textAlign = 'center';
-            ctx.fillText(`✨ ${agariResult.name} ✨`, 180, 140);
+            ctx.fillText(`✨ ${agariData.type === 'RON' ? 'ロン和了！' : 'ツモ和了！'} ${agariData.name} ✨`, 180, 135);
 
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 18px sans-serif';
-            ctx.fillText(`+${agariResult.score} 点獲得！ 大勝利！`, 180, 175);
+            ctx.fillText(`大将から +${agariData.score} 点獲得！ 大勝利！`, 180, 170);
 
             ctx.font = '12px sans-serif';
             ctx.fillStyle = '#a8e6cf';
-            agariResult.yaku.forEach((yk, idx) => {
-                ctx.fillText(yk, 180, 210 + idx * 22);
+            agariData.yaku.forEach((yk, idx) => {
+                ctx.fillText(yk, 180, 202 + idx * 20);
             });
 
-            // 次の局へボタン
+            // もう一局ボタン
             ctx.fillStyle = '#f4a261';
             ctx.beginPath();
-            ctx.roundRect(90, 300, 180, 44, 8);
+            ctx.roundRect(90, 305, 180, 44, 8);
             ctx.fill();
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
@@ -638,7 +734,7 @@
 
             ctx.fillStyle = '#2c2520';
             ctx.font = 'bold 15px sans-serif';
-            ctx.fillText('もう一局打つ 🀄', 180, 328);
+            ctx.fillText('もう一局勝負！ 🀄', 180, 333);
         } else if (gameState === 'RYUKYOKU') {
             ctx.fillStyle = 'rgba(10, 20, 15, 0.92)';
             ctx.fillRect(20, 150, 320, 160);
@@ -649,7 +745,7 @@
             ctx.fillStyle = '#fcfaf2';
             ctx.font = 'bold 20px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('流局 (ツモ終了)', 180, 200);
+            ctx.fillText('流局 (引き分け)', 180, 200);
 
             ctx.fillStyle = '#f4a261';
             ctx.beginPath();
@@ -660,15 +756,15 @@
             ctx.fillText('もう一局打つ 🀄', 180, 264);
         }
 
-        // 操作ガイド
+        // フッター
         ctx.fillStyle = '#aaa';
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('ランダム配牌中！「捨」の牌を切っていくと当たり牌が引き寄せられます！', 180, 480);
+        ctx.fillText('大将との1対1対戦中！テンパイしたらロンかツモで決めよう！', 180, 480);
     }
 
     // ==========================================================================
-    // 🎮 ループ ＆ タップ判定
+    // 🎮 ループ ＆ タップ入力判定
     // ==========================================================================
     let animId = null;
     function loop() {
@@ -691,34 +787,48 @@
     function handleInput(p) {
         unlockAudio();
 
+        // アガリ・流局画面のリトライ
         if (gameState === 'AGARI' || gameState === 'RYUKYOKU') {
-            if (p.x >= 90 && p.x <= 270 && p.y >= 240 && p.y <= 360) {
+            if (p.x >= 90 && p.x <= 270 && p.y >= 230 && p.y <= 360) {
                 startNewGame();
             }
             return;
         }
 
+        // ロン和了チャンス中
+        if (turn === 'RON_CHANCE') {
+            if (p.x >= 40 && p.x <= 175 && p.y >= 230 && p.y <= 280) {
+                executePlayerWin(true); // ロン和了
+                return;
+            } else if (p.x >= 190 && p.x <= 310 && p.y >= 230 && p.y <= 280) {
+                skipRon(); // スルー
+                return;
+            }
+        }
+
         // ツモ和了ボタンタップ
-        if (isReadyToWin && p.x >= 80 && p.x <= 280 && p.y >= 170 && p.y <= 230) {
-            executeAgari();
+        if (playerTsumo !== null && playerWinningTiles.includes(playerTsumo) && p.x >= 80 && p.x <= 280 && p.y >= 230 && p.y <= 280) {
+            executePlayerWin(false); // ツモ和了
             return;
         }
 
-        // 手牌タップ判定
-        const handY = 320;
-        if (p.y >= handY - 15 && p.y <= handY + 45) {
-            for (let i = 0; i < hand.length; i++) {
-                const x = 16 + i * 23;
-                if (p.x >= x && p.x <= x + 22) {
-                    discard(i);
-                    return;
+        // プレイヤーターン時の手牌タップ（打牌）
+        if (turn === 'PLAYER') {
+            const handY = 325;
+            if (p.y >= handY - 15 && p.y <= handY + 45) {
+                for (let i = 0; i < playerHand.length; i++) {
+                    const x = 16 + i * 23;
+                    if (p.x >= x && p.x <= x + 22) {
+                        playerDiscard(i);
+                        return;
+                    }
                 }
-            }
-            if (tsumoTile !== null) {
-                const tsumoX = 16 + 13 * 23 + 6;
-                if (p.x >= tsumoX && p.x <= tsumoX + 22) {
-                    discard(-1);
-                    return;
+                if (playerTsumo !== null) {
+                    const tsumoX = 16 + 13 * 23 + 6;
+                    if (p.x >= tsumoX && p.x <= tsumoX + 22) {
+                        playerDiscard(-1); // ツモ切り
+                        return;
+                    }
                 }
             }
         }
