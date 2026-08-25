@@ -265,7 +265,7 @@
             <p class="copyright">&copy; 地鶏家 琴嵐 天満店 All Rights Reserved.</p>
         </div>
     </footer>
-   <!-- 🕹️ ゲームポップアップ ＆ 2画面Canvas -->
+   <!-- 🕹️ ゲームポップアップ ＆ 4大ゲーム切替 -->
     <div id="game-trigger" class="game-float-btn" title="ゲームで遊ぶ" data-i18n="game_btn">
         🎮 琴嵐 ゲイム
     </div>
@@ -274,21 +274,33 @@
         <div class="game-modal-content">
             <span id="game-close-btn" class="game-close-btn">&times;</span>
             
-            <!-- 🎮 ゲーム選択タブ -->
+            <!-- 🎮 4大ゲーム選択タブ -->
             <div class="game-tab-container">
                 <button type="button" id="tab-slot" class="game-tab-btn active" onclick="switchGameMode('slot')">
-                    🎰 パチスロ 琴嵐
+                    🎰 スロット
                 </button>
                 <button type="button" id="tab-invader" class="game-tab-btn" onclick="switchGameMode('invader')">
-                    👾 琴嵐 インベーダー
+                    👾 インベーダー
+                </button>
+                <button type="button" id="tab-pacman" class="game-tab-btn" onclick="switchGameMode('pacman')">
+                    🟡 パックマン
+                </button>
+                <button type="button" id="tab-mahjong" class="game-tab-btn" onclick="switchGameMode('mahjong')">
+                    🀄 麻雀
                 </button>
             </div>
 
-            <!-- パチスロ専用 Canvas -->
+            <!-- ① パチスロ専用 Canvas -->
             <canvas id="slotGameCanvas" width="360" height="500"></canvas>
 
-            <!-- インベーダー専用 Canvas -->
+            <!-- ② インベーダー専用 Canvas -->
             <canvas id="gameCanvas" width="360" height="500" style="display: none;"></canvas>
+
+            <!-- ③ パックマン専用 Canvas -->
+            <canvas id="pacmanCanvas" width="360" height="500" style="display: none;"></canvas>
+
+            <!-- ④ 麻雀専用 Canvas -->
+            <canvas id="mahjongCanvas" width="360" height="500" style="display: none;"></canvas>
             
             <div id="game-instruction-text" class="game-mobile-instruction">
                 PC: Space（スタート） / Z, X, C（ストップ）<br>
@@ -297,40 +309,63 @@
         </div>
     </div>
 
-    <!-- 外部スクリプトの読み込み（3つすべて読み込みます） -->
+    <!-- 外部スクリプトの読み込み -->
     <script src="game.js"></script>
     <script src="slot-game.js"></script>
+    <script src="pacman-game.js"></script>
+    <script src="mahjong-game.js"></script>
     <script src="slot.js"></script>
 
-    <!-- 🌐 ゲーム切り替えスイッチロジック -->
+    <!-- 🌐 4画面ゲーム切り替えスイッチロジック -->
     <script>
         function switchGameMode(mode) {
             const slotCanvas = document.getElementById('slotGameCanvas');
             const invaderCanvas = document.getElementById('gameCanvas');
+            const pacmanCanvas = document.getElementById('pacmanCanvas');
+            const mahjongCanvas = document.getElementById('mahjongCanvas');
+
             const tabSlot = document.getElementById('tab-slot');
             const tabInvader = document.getElementById('tab-invader');
+            const tabPacman = document.getElementById('tab-pacman');
+            const tabMahjong = document.getElementById('tab-mahjong');
             const inst = document.getElementById('game-instruction-text');
+
+            // 全ゲーム停止
+            if (typeof window.stopSlotGame === 'function') window.stopSlotGame();
+            if (typeof window.stopGame === 'function') window.stopGame();
+            if (typeof window.stopPacmanGame === 'function') window.stopPacmanGame();
+            if (typeof window.stopMahjongGame === 'function') window.stopMahjongGame();
+
+            // 全Canvas非表示＆タブ非アクティブ
+            slotCanvas.style.display = 'none';
+            invaderCanvas.style.display = 'none';
+            pacmanCanvas.style.display = 'none';
+            mahjongCanvas.style.display = 'none';
+            tabSlot.classList.remove('active');
+            tabInvader.classList.remove('active');
+            tabPacman.classList.remove('active');
+            tabMahjong.classList.remove('active');
 
             if (mode === 'slot') {
                 tabSlot.classList.add('active');
-                tabInvader.classList.remove('active');
                 slotCanvas.style.display = 'block';
-                invaderCanvas.style.display = 'none';
-
-                if (typeof window.stopGame === 'function') window.stopGame();
                 if (typeof window.startSlotGame === 'function') window.startSlotGame();
-
                 inst.innerHTML = 'PC: Space（スタート） / Z, X, C（ストップ）<br>スマホ: 画面のボタンをタップ';
-            } else {
-                tabSlot.classList.remove('active');
+            } else if (mode === 'invader') {
                 tabInvader.classList.add('active');
-                slotCanvas.style.display = 'none';
                 invaderCanvas.style.display = 'block';
-
-                if (typeof window.stopSlotGame === 'function') window.stopSlotGame();
                 if (typeof window.initGame === 'function') window.initGame();
-
                 inst.innerHTML = 'PC: ← →（移動） / Space（連射）<br>スマホ: 画面スライド（移動＆自動連射）';
+            } else if (mode === 'pacman') {
+                tabPacman.classList.add('active');
+                pacmanCanvas.style.display = 'block';
+                if (typeof window.startPacmanGame === 'function') window.startPacmanGame();
+                inst.innerHTML = 'PC: 矢印キー / WASD（移動）<br>スマホ: 画面スワイプで方向転換';
+            } else if (mode === 'mahjong') {
+                tabMahjong.classList.add('active');
+                mahjongCanvas.style.display = 'block';
+                if (typeof window.startMahjongGame === 'function') window.startMahjongGame();
+                inst.innerHTML = '不要な牌をタップして打牌 / ツモ和了で役満を目指そう！';
             }
         }
 
@@ -341,11 +376,14 @@
 
         gameTrigger.addEventListener('click', () => {
             gameModal.classList.add('active');
-            const isSlotActive = document.getElementById('tab-slot').classList.contains('active');
-            if (isSlotActive) {
+            if (document.getElementById('tab-slot').classList.contains('active')) {
                 if (typeof window.startSlotGame === 'function') window.startSlotGame();
-            } else {
+            } else if (document.getElementById('tab-invader').classList.contains('active')) {
                 if (typeof window.initGame === 'function') window.initGame();
+            } else if (document.getElementById('tab-pacman').classList.contains('active')) {
+                if (typeof window.startPacmanGame === 'function') window.startPacmanGame();
+            } else if (document.getElementById('tab-mahjong').classList.contains('active')) {
+                if (typeof window.startMahjongGame === 'function') window.startMahjongGame();
             }
         });
 
@@ -353,6 +391,8 @@
             gameModal.classList.remove('active');
             if (typeof window.stopSlotGame === 'function') window.stopSlotGame();
             if (typeof window.stopGame === 'function') window.stopGame();
+            if (typeof window.stopPacmanGame === 'function') window.stopPacmanGame();
+            if (typeof window.stopMahjongGame === 'function') window.stopMahjongGame();
         });
 
         gameModal.addEventListener('click', (e) => {
@@ -360,6 +400,8 @@
                 gameModal.classList.remove('active');
                 if (typeof window.stopSlotGame === 'function') window.stopSlotGame();
                 if (typeof window.stopGame === 'function') window.stopGame();
+                if (typeof window.stopPacmanGame === 'function') window.stopPacmanGame();
+                if (typeof window.stopMahjongGame === 'function') window.stopMahjongGame();
             }
         });
     </script>
